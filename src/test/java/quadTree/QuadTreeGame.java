@@ -9,27 +9,27 @@ import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.quadTree.Rect;
-import physics.quadTree.part1.StaticQuadTree;
-import physics.quadTree.part1.StaticQuadTreeContainer;
+import physics.quadTree.part1.QuadTreeContainer;
 
 import java.util.Random;
 
 public class QuadTreeGame extends AbstractGame {
 
-    private PanAndZoom pz;
-
-    //private StaticQuadTreeContainer<Rect> tree;
-    private StaticQuadTree<Rect> tree;
+    private final float FIELD_AREA = 100000f;
 
     private final int NUM_OBJECTS = 1000000;
 
-    private final float MAX_SEARCH_AREA = 1000.0f;
+    private final float MAX_SEARCH_AREA = 5000.0f;
+
+    private final Vec2df RECT_SIZE = new Vec2df(1, 100);
+
+    private QuadTreeContainer<Rect> tree;
+
+    private PanAndZoom pz;
 
     private float searchSize = 500.0f;
 
     private Rect searchRect;
-
-    private float area = 100000f;
 
     private Random rnd;
 
@@ -43,18 +43,23 @@ public class QuadTreeGame extends AbstractGame {
         return rnd.nextFloat() * (b - a) + a;
     }
 
+    private float rndFloat(Vec2df v) {
+        return rndFloat(v.getX(), v.getY());
+    }
+
+    // Funcionamiento del juego
+
     @Override
     public void initialize(GameApplication gc) {
         rnd = new Random();
         pz = new PanAndZoom(gc.getGraphicsContext());
 
-        //tree = new StaticQuadTreeContainer<>(new Rect(0, 0, area, area));
-        tree = new StaticQuadTree<>(new Rect(0,0, area, area));
+        tree = new QuadTreeContainer<>(new Rect(0,0, FIELD_AREA, FIELD_AREA));
 
         for (int i = 0; i < NUM_OBJECTS; i++) {
             Rect r = new Rect();
-            r.getPos().set(rndFloat(0, area), rndFloat(0, area));
-            r.getSize().set(rndFloat(1, 100), rndFloat(1, 100));
+            r.getPos().set(rndFloat(0, FIELD_AREA), rndFloat(0, FIELD_AREA));
+            r.getSize().set(rndFloat(RECT_SIZE), rndFloat(RECT_SIZE));
             r.setColor(Color.rgb(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255)));
 
             tree.insert(r, new Rect(r.getPos(), r.getSize()));
@@ -93,8 +98,8 @@ public class QuadTreeGame extends AbstractGame {
         searchRect.set(rectOrigin, searchArea);
         searchRect.setColor(Color.rgb(255, 255, 255, 0.3));
 
+        var toRemove = tree.search(searchRect);
         if (gc.getInput().isKeyHeld(KeyCode.DELETE)) {
-            var toRemove = tree.search(searchRect);
             for (var obj : toRemove) {
                 tree.remove(obj);
             }
@@ -115,12 +120,10 @@ public class QuadTreeGame extends AbstractGame {
         // Dibujar los objetos en pantalla
         long t1 = System.nanoTime();
         for (var obj : tree.search(screen)) {
-            if (obj != null) {
-                if (screen.overlaps(obj)) {
-                    pz.getGc().setFill(obj.getColor());
-                    pz.fillRect(obj.getPos(), obj.getSize());
-                    numObjDrawn++;
-                }
+            if (screen.overlaps(obj)) {
+                pz.getGc().setFill(obj.getColor());
+                pz.fillRect(obj.getPos(), obj.getSize());
+                numObjDrawn++;
             }
         }
         long t2 = System.nanoTime();
@@ -128,6 +131,7 @@ public class QuadTreeGame extends AbstractGame {
 
         // Dibujar el quadTree
         if (isDrawTree) {
+            pz.getGc().setFill(Color.WHITE);
             pz.getGc().setStroke(Color.WHITE);
             pz.getGc().setLineWidth(10);
             tree.draw(pz, screen);
@@ -136,6 +140,22 @@ public class QuadTreeGame extends AbstractGame {
         // Dibujar el área de búsqueda
         pz.getGc().setFill(searchRect.getColor());
         pz.fillRect(searchRect.getPos(), searchRect.getSize());
+
+        // Dibujar los objetos seleccionados
+        pz.getGc().setFill(Color.RED);
+        for (var obj : tree.search(searchRect)) {
+            if (screen.overlaps(obj)) {
+                Vec2df ori = new Vec2df(obj.getPos());
+                Vec2df size = new Vec2df(obj.getSize());
+                size.multiply(0.5f);
+                ori.add(size);
+                Vec2df textPos = pz.worldToScreen(obj.getPos());
+
+                String str = obj.toString();
+                str = str.replace("physics.quadTree.Rect", "");
+                gc.getGraphicsContext().fillText(str, textPos.getX(), textPos.getY());
+            }
+        }
 
         // Dibujar textos
         gc.getGraphicsContext().setFill(Color.WHITE);

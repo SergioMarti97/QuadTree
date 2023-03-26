@@ -1,40 +1,39 @@
-package physics.quadTree.part2;
-
-import panAndZoom.PanAndZoom;
+package physics.quadTree.part1;
 
 import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
+import panAndZoom.PanAndZoom;
 import physics.quadTree.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DynamicQuadTree<T> {
+public class QuadTree<T> {
 
     private final int NUM_CHILDREN = 4;
 
-    private final int MAX_DEPTH = 8;
+    private final int MAX_DEPTH = 10;
 
     private Rect rect;
 
     private Rect[] rectChildren = new Rect[NUM_CHILDREN];
 
-    private final DynamicQuadTree<T>[] children = new DynamicQuadTree[NUM_CHILDREN];
+    private final QuadTree<T>[] children = new QuadTree[NUM_CHILDREN];
 
     private final ArrayList<Pair<Rect, T>> items = new ArrayList<>();
 
     private int depth = 0;
 
-    public DynamicQuadTree(Rect rect, int depth) {
+    public QuadTree(Rect rect, int depth) {
         this.depth = depth;
         resize(rect);
     }
 
-    public DynamicQuadTree(Rect rect) {
+    public QuadTree(Rect rect) {
         this(rect, 0);
     }
 
-    public DynamicQuadTree() {
+    public QuadTree() {
         this(new Rect(0, 0, 100, 100), 0);
     }
 
@@ -47,9 +46,9 @@ public class DynamicQuadTree<T> {
         Vec2df childSize = new Vec2df(rect.getSize());
         childSize.multiply(0.5f);
 
-        if (rectChildren.length > 0) { // TODO no se si asignalo nada mas instanciar el objeto o aquí
+        /*if (rectChildren.length > 0) { // TODO no se si asignalo nada mas instanciar el objeto o aquí
             rectChildren = new Rect[NUM_CHILDREN];
-        }
+        }*/
 
         rectChildren[0] = new Rect(rect.getPos().getX(), rect.getPos().getY(), childSize.getX(), childSize.getY());
         rectChildren[1] = new Rect(rect.getPos().getX() + childSize.getX(), rect.getPos().getY(), childSize.getX(), childSize.getY());
@@ -78,23 +77,31 @@ public class DynamicQuadTree<T> {
         return count;
     }
 
-    public void insert(T item, Rect itemSize) {
+    //public QuadTreeItemLocation<T> insert(T item, Rect itemSize) {
+    // public void insert(T item, Rect itemSize) {
+    public Rect insert(T item, Rect itemSize) {
         // Comprobar si el objeto a insertar encaja en alguna de las 4 áreas hijas
         for (int i = 0; i < NUM_CHILDREN; i++) {
             if (rectChildren[i].contains(itemSize)) {
                 if (depth + 1 < MAX_DEPTH) {
 
                     if (children[i] == null) {
-                        children[i] = new DynamicQuadTree<T>(rectChildren[i], depth + 1);
+                        children[i] = new QuadTree<T>(rectChildren[i], depth + 1);
                     }
 
-                    children[i].insert(item, itemSize);
-                    return;
+                    return children[i].insert(item, itemSize);
+                    // children[i].insert(item, itemSize);
+                    // return;
                 }
             }
         }
 
+        // QuadTreeItemLocation itemAndLoc = new QuadTreeItemLocation<>(this, item);
+        // items.add(itemAndLoc);
         items.add(new Pair<>(itemSize, item));
+        return itemSize;
+        // return itemAndLoc;
+        //return;
     }
 
     public List<T> search(Rect area) {
@@ -122,6 +129,7 @@ public class DynamicQuadTree<T> {
     }
 
     private void items(List<T> list) {
+        //list.addAll(items.stream()..collect(Collectors.toList()));
         for (var item : items) {
             list.add(item.getValue());
         }
@@ -133,15 +141,30 @@ public class DynamicQuadTree<T> {
         }
     }
 
-    public boolean remove(T itemToRemove) {
+    public boolean remove(T itemToRemove, Rect loc) {
+
         boolean isHere = items.removeIf(p -> p.getValue() == itemToRemove);
 
         if (!isHere) {
             for (int i = 0; i < NUM_CHILDREN; i++) {
                 if (children[i] != null) {
-                    if (children[i].remove(itemToRemove)) {
-                        return true;
+
+                    // Todo, para que funcione eficientemente, el algoritmo se le debe de pasar 2 cosas, el elemento y su ubicación
+                    // Todo, comprobar si un elemento hijo no tiene items, eliminarse
+
+                    if (rectChildren[i].contains(loc) || rectChildren[i].overlaps(loc)) {
+                        boolean isRemoved = children[i].remove(itemToRemove, loc);
+
+                        if (isRemoved) {
+                            if (children[i].getItems().isEmpty() && !children[i].hasChildren()) {
+                                children[i] = null;
+                            }
+                        }
+
+                        return isRemoved;
                     }
+
+
                 }
             }
             return false;
@@ -149,6 +172,20 @@ public class DynamicQuadTree<T> {
             return true;
         }
     }
+
+    public boolean hasChildren() {
+        boolean hasChildren = false;
+        for (int i = 0; i < NUM_CHILDREN; i++) {
+            if (children[i] != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ---
+
+    // ---
 
     // Getters & Setters
 
@@ -160,7 +197,7 @@ public class DynamicQuadTree<T> {
         return rectChildren;
     }
 
-    public DynamicQuadTree<T>[] getChildren() {
+    public QuadTree<T>[] getChildren() {
         return children;
     }
 
@@ -174,6 +211,31 @@ public class DynamicQuadTree<T> {
 
     public void setDepth(int depth) {
         this.depth = depth;
+    }
+
+    // DrawYourself
+    public void draw(PanAndZoom pz, Rect screen) {
+        if (screen.contains(rect)) {
+            pz.strokeRect(rect.getPos(), rect.getSize());
+
+            /*Vec2df ori = new Vec2df(rect.getPos());
+            Vec2df size = new Vec2df(rect.getSize());
+            size.multiply(0.2f);
+            ori.add(size);
+            pz.fillText("Items: " + items.size(), ori.getX(), ori.getY());*/
+        }
+        //double thick = pz.getGc().getLineWidth();
+        //thick *= 0.8;
+        //pz.getGc().setLineWidth(thick);
+        for (int i = 0; i < NUM_CHILDREN; i++) {
+            if (children[i] != null) {
+                if (screen.contains(rectChildren[i])) {
+                    children[i].draw(pz, screen);
+                } else if (screen.overlaps(rectChildren[i])) {
+                    children[i].draw(pz, screen);
+                }
+            }
+        }
     }
 
 }

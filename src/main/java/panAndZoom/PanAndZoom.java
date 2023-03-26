@@ -213,4 +213,14 @@ public class PanAndZoom {
         return worldBottomRight;
     }
 
+    // Utilidades
+
+    public Vec2df worldToScreen(Vec2df v) {
+        return PanAndZoomUtils.worldToScreen(v, worldOffset, worldScale);
+    }
+
+    public Vec2df screenToWorld(Vec2df v) {
+        return PanAndZoomUtils.screenToWorld(v, worldOffset, worldScale);
+    }
+
 }
