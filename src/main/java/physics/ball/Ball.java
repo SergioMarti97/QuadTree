@@ -21,6 +21,16 @@ public class Ball {
 
     private Cell cell = null;
 
+    public Ball() {
+        this.id = -1;
+        this.pos = new Vec2df();
+        this.size = new Vec2df();
+        this.ori = new Vec2df();
+        this.vel = new Vec2df();
+        this.color = null;
+        this.cell = null;
+    }
+
     public Ball(int id, Vec2df pos, Vec2df vel, Vec2df size, Color color) {
         this.id = id;
         this.pos = pos;

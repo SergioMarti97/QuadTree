@@ -154,14 +154,13 @@ public class QuadTree<T> {
 
                     if (rectChildren[i].contains(loc) || rectChildren[i].overlaps(loc)) {
                         boolean isRemoved = children[i].remove(itemToRemove, loc);
-
                         if (isRemoved) {
-                            if (children[i].getItems().isEmpty() && !children[i].hasChildren()) {
+                            //if (!children[i].hasChildren() && children[i].getItems().isEmpty()) {
+                            if (!children[i].hasChildren() || children[i].getItems().isEmpty()) {
                                 children[i] = null;
                             }
+                            return isRemoved;
                         }
-
-                        return isRemoved;
                     }
 
 
@@ -174,11 +173,22 @@ public class QuadTree<T> {
     }
 
     public boolean hasChildren() {
-        boolean hasChildren = false;
         for (int i = 0; i < NUM_CHILDREN; i++) {
             if (children[i] != null) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean hasChildrenWithItems() {
+        boolean hasChildren = false;
+        for (int i = 0; i < NUM_CHILDREN; i++) {
+            if (children[i] != null) {
+                //return true;
+                hasChildren &= (!children[i].items.isEmpty());
+            }
+            return hasChildren;
         }
         return false;
     }

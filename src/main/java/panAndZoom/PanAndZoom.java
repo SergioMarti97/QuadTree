@@ -3,6 +3,7 @@ package panAndZoom;
 import base.GameApplication;
 import base.vectors.points2d.Vec2df;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.text.Font;
 
@@ -102,23 +103,23 @@ public class PanAndZoom {
     // Drawing methods
 
     public void strokeLine(Vec2df s, Vec2df e) {
-        Vec2df s2 = PanAndZoomUtils.worldToScreen(s, worldOffset, worldScale);
-        Vec2df e2 = PanAndZoomUtils.worldToScreen(e, worldOffset, worldScale);
+        Vec2df s2 = worldToScreen(s);
+        Vec2df e2 = worldToScreen(e);
         gc.strokeLine(s2.getX(), s2.getY(), e2.getX(), e2.getY());
     }
 
     public void fillRect(Vec2df pos, Vec2df size) {
-        Vec2df pos2 = PanAndZoomUtils.worldToScreen(pos, worldOffset, worldScale);
-        Vec2df size2 = PanAndZoomUtils.scaleToScreen(size, worldScale);
+        Vec2df pos2 = worldToScreen(pos);
+        Vec2df size2 = scaleToScreen(size);
         gc.fillRect(pos2.getX(), pos2.getY(), size2.getX(), size2.getY());
     }
 
     public void strokeRect(Vec2df pos, Vec2df size) {
-        Vec2df pos2 = PanAndZoomUtils.worldToScreen(pos, worldOffset, worldScale);
-        Vec2df size2 = PanAndZoomUtils.scaleToScreen(size, worldScale);
+        Vec2df pos2 = worldToScreen(pos);
+        Vec2df size2 = scaleToScreen(size);
 
         float copy = (float) gc.getLineWidth();
-        float stroke = PanAndZoomUtils.scaleToScreen(copy, worldScale.getX());
+        float stroke = scaleToScreenX(copy);
         gc.setLineWidth(stroke);
 
         gc.strokeRect(pos2.getX(), pos2.getY(), size2.getX(), size2.getY());
@@ -127,17 +128,17 @@ public class PanAndZoom {
     }
 
     public void fillOval(Vec2df pos, Vec2df size) {
-        Vec2df pos2 = PanAndZoomUtils.worldToScreen(pos, worldOffset, worldScale);
-        Vec2df size2 = PanAndZoomUtils.scaleToScreen(size, worldScale);
+        Vec2df pos2 = worldToScreen(pos);
+        Vec2df size2 = scaleToScreen(size);
         gc.fillOval(pos2.getX(), pos2.getY(), size2.getX(), size2.getY());
     }
 
     public void strokeOval(Vec2df pos, Vec2df size) {
-        Vec2df pos2 = PanAndZoomUtils.worldToScreen(pos, worldOffset, worldScale);
-        Vec2df size2 = PanAndZoomUtils.scaleToScreen(size, worldScale);
+        Vec2df pos2 = worldToScreen(pos);
+        Vec2df size2 = scaleToScreen(size);
 
         float copy = (float) gc.getLineWidth();
-        float stroke = PanAndZoomUtils.scaleToScreen(copy, worldScale.getX());
+        float stroke = scaleToScreenX(copy);
         gc.setLineWidth(stroke);
 
         gc.strokeOval(pos2.getX(), pos2.getY(), size2.getX(), size2.getY());
@@ -148,18 +149,94 @@ public class PanAndZoom {
     public void fillText(String text, float offX, float offY) {
         Font f = gc.getFont();
         double fontSize = f.getSize();
-        double newFontSize = PanAndZoomUtils.scaleToScreen((float) fontSize, worldScale.getX());
+        double newFontSize = scaleToScreenX((float) fontSize);
         gc.setFont(new Font(f.getName(), newFontSize));
-        float x2 = PanAndZoomUtils.worldToScreen(offX, worldOffset.getX(), worldScale.getX());
-        float y2 = PanAndZoomUtils.worldToScreen(offY, worldOffset.getY(), worldScale.getY());
+        float x2 = worldToScreenX(offX);
+        float y2 = worldToScreenY(offY);
         gc.fillText(text, x2, y2);
         gc.setFont(f);
     }
 
     public void strokeText(String text, float offX, float offY) {
-        float x2 = PanAndZoomUtils.worldToScreen(offX, worldOffset.getX(), worldScale.getX());
-        float y2 = PanAndZoomUtils.worldToScreen(offY, worldOffset.getY(), worldScale.getY());
+        float x2 = worldToScreenX(offX);
+        float y2 = worldToScreenY(offY);
         gc.strokeText(text, x2, y2);
+    }
+
+    // --- Draw Images
+
+    public void drawImage(Image img, float offX, float offY) {
+        float x2 = worldToScreenX(offX);
+        float y2 = worldToScreenY(offY);
+        gc.drawImage(img, x2, y2);
+    }
+
+    public void drawImage(Image img, Vec2df offset) {
+        Vec2df o = worldToScreen(offset);
+        gc.drawImage(img, o.getX(), o.getY());
+    }
+
+    public void drawImage(Image img, float offX, float offY, float width, float height) {
+        float x2 = worldToScreenX(offX);
+        float y2 = worldToScreenY(offY);
+        float w2 = scaleToScreenX(width);
+        float h2 = scaleToScreenY(height);
+        gc.drawImage(img, x2, y2, w2, h2);
+    }
+
+    public void drawImage(Image img, Vec2df offset, Vec2df size) {
+        Vec2df o = worldToScreen(offset);
+        Vec2df s = scaleToScreen(size);
+        gc.drawImage(img, o.getX(), o.getY(), s.getX(), s.getY());
+    }
+
+    public void drawImage(Image img,
+                          float sx,
+                          float sy,
+                          float sw,
+                          float sh,
+                          float dx,
+                          float dy,
+                          float dw,
+                          float dh) {
+        float dx2 = worldToScreenX(dx);
+        float dy2 = worldToScreenY(dy);
+        float dw2 = scaleToScreenX(dw);
+        float dh2 = scaleToScreenY(dh);
+
+        gc.drawImage(img, sx, sy, sw, sh, dx2, dy2, dw2, dh2);
+    }
+
+    public void drawImage(Image img,
+                          float sx,
+                          float sy,
+                          float sw,
+                          float sh,
+                          Vec2df pos,
+                          Vec2df scale) {
+        Vec2df p = worldToScreen(pos);
+        Vec2df s = scaleToScreen(scale);
+
+        gc.drawImage(img,
+                sx, sy,
+                sw, sh,
+                p.getX(), p.getY(),
+                s.getX(), s.getY());
+    }
+
+    public void drawImage(Image img,
+                          Vec2df sourceOri,
+                          Vec2df sourceDim,
+                          Vec2df pos,
+                          Vec2df scale) {
+        Vec2df p = worldToScreen(pos);
+        Vec2df s = scaleToScreen(scale);
+
+        gc.drawImage(img,
+                sourceOri.getX(), sourceOri.getY(),
+                sourceDim.getX(), sourceDim.getY(),
+                p.getX(), p.getY(),
+                s.getX(), s.getY());
     }
 
     // Getters & Setters
@@ -215,12 +292,58 @@ public class PanAndZoom {
 
     // Utilidades
 
+    public float worldToScreenX(float x) {
+        return PanAndZoomUtils.worldToScreen(x, worldOffset.getX(), worldScale.getX());
+    }
+
+    public float worldToScreenY(float y) {
+        return PanAndZoomUtils.worldToScreen(y, worldOffset.getY(), worldScale.getY());
+    }
+
     public Vec2df worldToScreen(Vec2df v) {
         return PanAndZoomUtils.worldToScreen(v, worldOffset, worldScale);
     }
 
+    // ---
+
+    public float screenToWorldX(float x) {
+        return PanAndZoomUtils.screenToWorld(x, worldOffset.getX(), worldScale.getX());
+    }
+
+    public float screenToWorldY(float y) {
+        return PanAndZoomUtils.screenToWorld(y, worldOffset.getY(), worldScale.getY());
+    }
+
     public Vec2df screenToWorld(Vec2df v) {
         return PanAndZoomUtils.screenToWorld(v, worldOffset, worldScale);
+    }
+
+    // ---
+
+    public float scaleToScreenX(float x) {
+        return PanAndZoomUtils.scaleToScreen(x, worldScale.getX());
+    }
+
+    public float scaleToScreenY(float y) {
+        return PanAndZoomUtils.scaleToScreen(y, worldScale.getY());
+    }
+
+    public Vec2df scaleToScreen(Vec2df v) {
+        return PanAndZoomUtils.scaleToScreen(v, worldScale);
+    }
+
+    // ---
+
+    public float scaleToWorldX(float x) {
+        return PanAndZoomUtils.scaleToWorld(x, worldScale.getX());
+    }
+
+    public float scaleToWorldY(float y) {
+        return PanAndZoomUtils.scaleToWorld(y, worldScale.getY());
+    }
+
+    public Vec2df scaleToWorld(Vec2df v) {
+        return PanAndZoomUtils.scaleToWorld(v, worldScale);
     }
 
 }

@@ -66,7 +66,6 @@ public class QuadTreeGame extends AbstractGame {
         }
 
         mouse = new Vec2df();
-
         searchRect = new Rect();
     }
 
@@ -114,10 +113,10 @@ public class QuadTreeGame extends AbstractGame {
         gc.getGraphicsContext().setFill(Color.BLACK);
         pz.fillRect(screen.getPos(), screen.getSize());
 
+        // Dibujar los objetos en pantalla
         int numObjDrawn = 0;
         float elapsedTime;
 
-        // Dibujar los objetos en pantalla
         long t1 = System.nanoTime();
         for (var obj : tree.search(screen)) {
             if (screen.overlaps(obj)) {
