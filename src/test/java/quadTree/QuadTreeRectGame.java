@@ -9,11 +9,11 @@ import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.quadTree.Rect;
-import physics.quadTree.part1.QuadTreeContainer;
+import physics.quadTree.QuadTreeContainer;
 
 import java.util.Random;
 
-public class QuadTreeGame extends AbstractGame {
+public class QuadTreeRectGame extends AbstractGame {
 
     private final float FIELD_AREA = 100000f;
 

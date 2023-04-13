@@ -1,7 +1,6 @@
-package physics.quadTree.part1;
+package physics.quadTree;
 
 import panAndZoom.PanAndZoom;
-import physics.quadTree.Rect;
 
 import java.util.*;
 
@@ -54,8 +53,10 @@ public class QuadTreeContainer<T> {
     // ---
 
     public void insert(T item, Rect itemSize) {
-        Rect loc = root.insert(item, itemSize);
-        items.put(item, loc);
+        // Rect loc = root.insert(item, itemSize);
+        // items.put(item, loc);
+        root.insert(item, itemSize);
+        items.put(item, itemSize);
     }
 
     public List<T> search(Rect rect) {
@@ -88,6 +89,18 @@ public class QuadTreeContainer<T> {
     public void relocate(T item, Rect newArea) {
         remove(item);
         insert(item, newArea);
+    }
+
+    public Collection<T> getValues() {
+        return items.keySet();
+    }
+
+    public List<T> getItems() {
+        return root.items();
+    }
+
+    public QuadTree<T> getRoot() {
+        return root;
     }
 
     // drawYourSelf

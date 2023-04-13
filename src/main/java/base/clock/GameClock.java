@@ -8,6 +8,8 @@ public class GameClock extends AnimationTimer {
 
     protected Render render;
 
+    protected float elapsedTime = 0;
+
     protected long firstTime = 0;
 
     protected long lastTime = 0;
@@ -26,7 +28,8 @@ public class GameClock extends AnimationTimer {
         if (lastTime > 0) {
             long elapsedTime = now - lastTime;
             accumulatedTime += elapsedTime;
-            updater.update(elapsedTime / 1000000000.0f);
+            this.elapsedTime = elapsedTime / 1000000000.0f;
+            updater.update(this.elapsedTime);
         } else {
             firstTime = now;
         }
@@ -54,6 +57,10 @@ public class GameClock extends AnimationTimer {
 
     public void setRender(Render render) {
         this.render = render;
+    }
+
+    public float getElapsedTime() {
+        return elapsedTime;
     }
 
 }

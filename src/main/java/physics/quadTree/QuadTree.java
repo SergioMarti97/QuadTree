@@ -1,9 +1,8 @@
-package physics.quadTree.part1;
+package physics.quadTree;
 
 import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
-import physics.quadTree.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +17,7 @@ public class QuadTree<T> {
 
     private Rect[] rectChildren = new Rect[NUM_CHILDREN];
 
-    private final QuadTree<T>[] children = new QuadTree[NUM_CHILDREN];
+    private QuadTree<T>[] children = new QuadTree[NUM_CHILDREN];
 
     private final ArrayList<Pair<Rect, T>> items = new ArrayList<>();
 
@@ -78,30 +77,35 @@ public class QuadTree<T> {
     }
 
     //public QuadTreeItemLocation<T> insert(T item, Rect itemSize) {
-    // public void insert(T item, Rect itemSize) {
-    public Rect insert(T item, Rect itemSize) {
+    public void insert(T item, Rect itemSize) {
+    // public Rect insert(T item, Rect itemSize) {
         // Comprobar si el objeto a insertar encaja en alguna de las 4 áreas hijas
         for (int i = 0; i < NUM_CHILDREN; i++) {
-            if (rectChildren[i].contains(itemSize)) {
-                if (depth + 1 < MAX_DEPTH) {
 
-                    if (children[i] == null) {
-                        children[i] = new QuadTree<T>(rectChildren[i], depth + 1);
+            try {
+                if (rectChildren[i].contains(itemSize)) {
+                    if (depth + 1 < MAX_DEPTH) {
+
+                        if (children[i] == null) {
+                            children[i] = new QuadTree<T>(rectChildren[i], depth + 1);
+                        }
+
+                        // return children[i].insert(item, itemSize);
+                        children[i].insert(item, itemSize);
+                        return;
                     }
-
-                    return children[i].insert(item, itemSize);
-                    // children[i].insert(item, itemSize);
-                    // return;
                 }
+            } catch (NullPointerException e) {
+                System.out.println(e.getMessage());
             }
         }
 
         // QuadTreeItemLocation itemAndLoc = new QuadTreeItemLocation<>(this, item);
         // items.add(itemAndLoc);
         items.add(new Pair<>(itemSize, item));
-        return itemSize;
+        // return itemSize;
         // return itemAndLoc;
-        //return;
+        // return;
     }
 
     public List<T> search(Rect area) {
@@ -129,7 +133,6 @@ public class QuadTree<T> {
     }
 
     private void items(List<T> list) {
-        //list.addAll(items.stream()..collect(Collectors.toList()));
         for (var item : items) {
             list.add(item.getValue());
         }
@@ -141,9 +144,41 @@ public class QuadTree<T> {
         }
     }
 
+    public List<T> items() {
+        ArrayList<T> list = new ArrayList<>();
+        items(list);
+        return list;
+    }
+
     public boolean remove(T itemToRemove, Rect loc) {
 
         boolean isHere = items.removeIf(p -> p.getValue() == itemToRemove);
+
+        /*if (isHere) {
+            if (hasChildren()) {
+                if (children[0] != null) {
+                    if (children[0].items.isEmpty()) {
+                        children[0].clear();
+                    }
+                }
+                if (children[1] != null) {
+                    if (children[1].items.isEmpty()) {
+                        children[1].clear();
+                    }
+                }
+                if (children[2] != null) {
+                    if (children[2].items.isEmpty()) {
+                        children[2].clear();
+                    }
+                }
+                if (children[3] != null) {
+                    if (children[3].items.isEmpty()) {
+                        children[3].clear();
+                    }
+                }
+            }
+        }*/
+
 
         if (!isHere) {
             for (int i = 0; i < NUM_CHILDREN; i++) {
@@ -152,15 +187,41 @@ public class QuadTree<T> {
                     // Todo, para que funcione eficientemente, el algoritmo se le debe de pasar 2 cosas, el elemento y su ubicación
                     // Todo, comprobar si un elemento hijo no tiene items, eliminarse
 
-                    if (rectChildren[i].contains(loc) || rectChildren[i].overlaps(loc)) {
+                    if (rectChildren[i].contains(loc)) { // || rectChildren[i].overlaps(loc)
                         boolean isRemoved = children[i].remove(itemToRemove, loc);
-                        if (isRemoved) {
+
+                        if (children[i].isEmpty()) {
+                            children[i] = null;
+                        }
+
+                        //if (isRemoved) {
                             //if (!children[i].hasChildren() && children[i].getItems().isEmpty()) {
-                            if (!children[i].hasChildren() || children[i].getItems().isEmpty()) {
+                            /*if (!children[i].hasChildren() || children[i].getItems().isEmpty()) {
                                 children[i] = null;
                             }
-                            return isRemoved;
-                        }
+                            return isRemoved;*/
+
+                            /*boolean allChildrenNoHaveItems = true;
+                            for (int j = 0; j < NUM_CHILDREN; j++) {
+                                if (children[j] != null) {
+                                    if (children[j].size() == 0) {
+                                        // children[j] = null;
+                                        allChildrenNoHaveItems = false;
+                                    }
+                                }
+                            }
+                            if (allChildrenNoHaveItems) {
+                                children = new QuadTree[NUM_CHILDREN];
+                            }*/
+
+                            /*if (children[i].size() == 0) {
+                                children[i].clear();
+                            }*/
+
+                        //}
+
+                        return isRemoved;
+
                     }
 
 
@@ -168,7 +229,7 @@ public class QuadTree<T> {
             }
             return false;
         } else {
-            return true;
+            return isHere;
         }
     }
 
@@ -181,16 +242,26 @@ public class QuadTree<T> {
         return false;
     }
 
-    public boolean hasChildrenWithItems() {
-        boolean hasChildren = false;
-        for (int i = 0; i < NUM_CHILDREN; i++) {
-            if (children[i] != null) {
-                //return true;
-                hasChildren &= (!children[i].items.isEmpty());
+    public boolean isEmpty() {
+        if (!hasChildren()) {
+            return items.isEmpty();
+        } else {
+            boolean isEmpty = items.isEmpty();
+            if (isEmpty) {
+
+                for (int i = 0; i < NUM_CHILDREN; i++) {
+                    if (children[i] != null) {
+                        if (!children[i].isEmpty()) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+
+            } else {
+                return false;
             }
-            return hasChildren;
         }
-        return false;
     }
 
     // ---
@@ -248,4 +319,8 @@ public class QuadTree<T> {
         }
     }
 
+    @Override
+    public String toString() {
+        return "QuadTree {children: " + children.length + "}";
+    }
 }

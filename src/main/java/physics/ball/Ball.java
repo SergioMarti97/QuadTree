@@ -1,9 +1,9 @@
 package physics.ball;
 
 import base.vectors.points2d.Vec2df;
-import physics.grid.Cell;
 import panAndZoom.PanAndZoom;
 import javafx.scene.paint.Color;
+import physics.quadTree.Rect;
 
 public class Ball {
 
@@ -11,15 +11,15 @@ public class Ball {
 
     private Vec2df pos;
 
+    private Vec2df ori;
+
     private Vec2df size;
 
-    private Vec2df ori;
+    private Vec2df radius;
 
     private Vec2df vel;
 
     private Color color;
-
-    private Cell cell = null;
 
     public Ball() {
         this.id = -1;
@@ -27,8 +27,8 @@ public class Ball {
         this.size = new Vec2df();
         this.ori = new Vec2df();
         this.vel = new Vec2df();
+        this.radius = new Vec2df();
         this.color = null;
-        this.cell = null;
     }
 
     public Ball(int id, Vec2df pos, Vec2df vel, Vec2df size, Color color) {
@@ -39,6 +39,7 @@ public class Ball {
         this.color = color;
         this.ori = new Vec2df();
         calOri();
+        calRadius();
     }
 
     public void draw(PanAndZoom pz, float dt) {
@@ -82,17 +83,78 @@ public class Ball {
 
         pz.getGc().setFill(Color.BLACK);
         pz.fillText(String.format("%d", id), ori.getX(), ori.getY());
-
-        if (cell != null) {
-            pz.fillText(cell.toString(), ori.getX(), ori.getY() + 10);
-        }
     }
 
-    private void calOri() {
+    public void calOri() {
         ori.set(
                 pos.getX() + size.getX() / 2f,
                 pos.getY() + size.getY() / 2f
         );
+    }
+
+    public void calRadius() {
+        radius.set(
+                size.getX() / 2f,
+                size.getY() / 2f
+        );
+    }
+
+    // Functionalities
+
+    public void calPos() {
+        pos.set(
+                ori.getX() - size.getX() / 2f,
+                ori.getY() - size.getY() / 2f
+        );
+    }
+
+    public float dist(Ball b) {
+        return ori.dist(b.ori);
+    }
+
+    public boolean overlaps(Ball b) {
+        return (pos.getX() < b.pos.getX() + b.size.getX() && pos.getX() + size.getX() >= b.pos.getX() && pos.getY() < b.pos.getY() + b.size.getY() && pos.getY() + size.getY() >= b.pos.getY());
+    }
+
+    /**
+     * This method returns the sear area based on the position and the velocity
+     * @return a rect to search other colliding balls
+     */
+    public Rect getSearchRect(float dt) {
+        Rect ballArea = new Rect();
+
+        // Si no se va a modificar la posición de este Rect, se puede pasar sin instanciar un nuevo vector
+        ballArea.getPos().set(pos);
+
+        if (vel.getX() == 0) {
+            ballArea.getSize().setX(size.getX());
+        } else {
+            float velX = vel.getX() * dt;
+            ballArea.getSize().setX(velX);
+            if (velX < 0) {
+                velX = -velX;
+                ballArea.getSize().setX(velX);
+
+                ballArea.getPos().addToX(-velX);
+                ballArea.getSize().addToX(size.getX());
+            }
+        }
+
+        if (vel.getY() == 0) {
+            ballArea.getSize().setY(size.getY());
+        } else {
+            float velY = vel.getY() * dt;
+            ballArea.getSize().setY(velY);
+            if (velY < 0) {
+                velY = -velY;
+                ballArea.getSize().setY(velY);
+
+                ballArea.getPos().addToY(-velY);
+                ballArea.getSize().addToY(size.getY());
+            }
+        }
+
+        return ballArea;
     }
 
     // Getters & Setters
@@ -133,18 +195,16 @@ public class Ball {
         this.color = color;
     }
 
-    // Other stuff
-
-    public Cell getCell() {
-        return cell;
+    public Vec2df getRadius() {
+        return radius;
     }
 
-    public void setCell(Cell cell) {
-        this.cell = cell;
+    public Vec2df getOri() {
+        return ori;
     }
 
     @Override
     public String toString() {
-        return "id: " + id + " " + cell.toString();
+        return "id: " + id;
     }
 }

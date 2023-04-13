@@ -70,4 +70,9 @@ public class Rect {
     public void setColor(Color color) {
         this.color = color;
     }
+
+    @Override
+    public String toString() {
+        return "Rect { ori " + pos.toString() + " size " + size.toString() + "}";
+    }
 }
