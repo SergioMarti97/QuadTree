@@ -218,7 +218,13 @@ public class QuadTreeCircleGame extends AbstractGame {
                 var neighbours = treeBalls.search(ballArea);
                 for (var n : neighbours) {
                     if (b.getId() != n.getId()) {
-                        if (b.overlaps(n)) {
+
+                        b.calOri();
+                        b.calRadius();
+                        n.calOri();
+                        n.calRadius();
+
+                        if (b.doCirclesOverlap(n)) {
                             collidingPairs.add(new Pair<>(b, n));
 
                             b.calOri();
@@ -227,20 +233,16 @@ public class QuadTreeCircleGame extends AbstractGame {
                             n.calRadius();
 
                             float dist = b.dist(n);
-                            //if(dist > 0.0001) {
-                                float overlap = 0.5f * (dist - b.getRadius().getX() - n.getRadius().getX());
+                            float overlap = 0.5f * (dist - b.getRadius() - n.getRadius());
 
-                                float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
-                                float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
+                            float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
+                            float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
 
-                                b.getPos().addToX(-x);
-                                b.getPos().addToY(-y);
-                                // b.calPos();
+                            b.getPos().addToX(-x);
+                            b.getPos().addToY(-y);
 
-                                n.getPos().addToX(x);
-                                n.getPos().addToY(y);
-                                // n.calPos();
-                            //}
+                            n.getPos().addToX(x);
+                            n.getPos().addToY(y);
                         }
                     }
                 }

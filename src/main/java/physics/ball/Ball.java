@@ -15,7 +15,7 @@ public class Ball {
 
     private Vec2df size;
 
-    private Vec2df radius;
+    private float radius;
 
     private Vec2df vel;
 
@@ -27,7 +27,7 @@ public class Ball {
         this.size = new Vec2df();
         this.ori = new Vec2df();
         this.vel = new Vec2df();
-        this.radius = new Vec2df();
+        this.radius = 0;
         this.color = null;
     }
 
@@ -93,10 +93,7 @@ public class Ball {
     }
 
     public void calRadius() {
-        radius.set(
-                size.getX() / 2f,
-                size.getY() / 2f
-        );
+        radius = size.getX() / 2f;
     }
 
     // Functionalities
@@ -114,6 +111,12 @@ public class Ball {
 
     public boolean overlaps(Ball b) {
         return (pos.getX() < b.pos.getX() + b.size.getX() && pos.getX() + size.getX() >= b.pos.getX() && pos.getY() < b.pos.getY() + b.size.getY() && pos.getY() + size.getY() >= b.pos.getY());
+    }
+    
+    public boolean doCirclesOverlap(Ball b) {
+        return (this.ori.getX() - b.getOri().getX()) * (this.ori.getX() - b.getOri().getX()) +
+                (this.ori.getY() - b.getOri().getY()) * (this.ori.getY() - b.getOri().getY()) <=
+                (radius + b.getRadius()) * (radius + b.getRadius());
     }
 
     /**
@@ -195,7 +198,7 @@ public class Ball {
         this.color = color;
     }
 
-    public Vec2df getRadius() {
+    public float getRadius() {
         return radius;
     }
 

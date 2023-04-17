@@ -1,4 +1,4 @@
-package quadTree;
+package quadTree.bugs;
 
 import base.AbstractGame;
 import base.GameApplication;
@@ -11,7 +11,6 @@ import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.quadTree.Rect;
 import physics.quadTree.QuadTreeContainer;
-import quadTree.bugs.Bush;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -48,6 +48,10 @@ public class Vec2df implements Vec2d {
         this.y = vec2df.getY();
     }
 
+    // ************** //
+    // Add operations //
+    // ************** //
+
     /**
      * This method add to the components the amount
      * pass as a parameter
@@ -77,6 +81,43 @@ public class Vec2df implements Vec2d {
     }
 
     /**
+     * This method add to each component a different amount
+     * passed by parameter to x and y coordinates
+     * @param x the amount to add to x
+     * @param y the amount to add to y
+     */
+    public void add(float x, float y) {
+        addToX(x);
+        addToY(y);
+    }
+
+    // ********************** //
+    // Subtraction operations //
+    // ********************** //
+
+    public void sub(float amount) {
+        x -= amount;
+        y -= amount;
+    }
+
+    public void subToX(float amount) {
+        x -= amount;
+    }
+
+    public void subToY(float amount) {
+        y -= amount;
+    }
+
+    public void sub(float x, float y) {
+        subToX(x);
+        subToY(y);
+    }
+
+    // ******************* //
+    // Multiply operations //
+    // ******************* //
+
+    /**
      * This method multiply the two components by the amount
      * pass as a parameter
      * @param amount the amount to multiply both components
@@ -102,6 +143,33 @@ public class Vec2df implements Vec2d {
      */
     public void multiplyYBy(float amount) {
         y *= amount;
+    }
+
+    public void multiply(float x, float y) {
+        multiplyXBy(x);
+        multiplyYBy(y);
+    }
+
+    // ******************* //
+    // Division operations //
+    // ******************* //
+
+    public void division(float amount) {
+        x /= amount;
+        y /= amount;
+    }
+
+    public void divisionXBy(float amount) {
+        x /= amount;
+    }
+
+    public void divisionYBy(float amount) {
+        y /= amount;
+    }
+
+    public void division(float x, float y) {
+        divisionXBy(x);
+        divisionYBy(y);
     }
 
     /**
@@ -225,6 +293,12 @@ public class Vec2df implements Vec2d {
         }
     }
 
+    public Vec2df add(Vec2df vec2df) {
+        this.x += vec2df.getX();
+        this.y += vec2df.getY();
+        return this;
+    }
+
     @Override
     public void sub(Vec2d vec2d) {
         if ( vec2d instanceof Vec2df) {
@@ -232,6 +306,12 @@ public class Vec2df implements Vec2d {
             this.x -= vec2df.getX();
             this.y -= vec2df.getY();
         }
+    }
+
+    public Vec2df sub(Vec2df vec2df) {
+        this.x -= vec2df.getX();
+        this.y -= vec2df.getY();
+        return this;
     }
 
     @Override
@@ -243,6 +323,12 @@ public class Vec2df implements Vec2d {
         }
     }
 
+    public Vec2df multiply(Vec2df vec2df) {
+        this.x *= vec2df.getX();
+        this.y *= vec2df.getY();
+        return this;
+    }
+
     @Override
     public void divide(Vec2d vec2d) {
         if ( vec2d instanceof Vec2df) {
@@ -250,6 +336,12 @@ public class Vec2df implements Vec2d {
             this.x /= vec2df.getX();
             this.y /= vec2df.getY();
         }
+    }
+
+    public Vec2df divide(Vec2df vec2df) {
+        this.x /= vec2df.getX();
+        this.y /= vec2df.getY();
+        return this;
     }
 
     @Override
@@ -277,6 +369,10 @@ public class Vec2df implements Vec2d {
         float y = (float)((this.x * Math.sin(angle)) + (this.y * Math.cos(angle)));
         this.x = x;
         this.y = y;
+    }
+
+    public Vec2df negative() {
+        return new Vec2df(-x, -y);
     }
 
     /**

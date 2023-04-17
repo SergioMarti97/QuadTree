@@ -1,15 +1,11 @@
 package base;
 
 import base.clock.GameClock;
-import base.graphics.Renderer;
 import base.input.Input;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelFormat;
-import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -126,10 +122,6 @@ public class GameApplication extends Application {
     public void setGame(AbstractGame game) {
         this.game = game;
     }
-
-    /*public Renderer getRenderer() {
-        return renderer;
-    }*/
 
     public Input getInput() {
         return input;

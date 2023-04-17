@@ -1,7 +1,6 @@
 package quadTree.bugs;
 
 import base.vectors.points2d.Vec2df;
-import javafx.scene.image.Image;
 
 public class Bush {
 
