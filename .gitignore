@@ -3,6 +3,8 @@
 *.iml
 .DS_Store
 *.csv
+*.png
+*.xcf
 QuadTreeContainer.java
 QuadTreeContainer2.java
 src/test/java/measure

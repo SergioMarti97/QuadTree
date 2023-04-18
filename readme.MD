@@ -4,7 +4,7 @@ Implementación de algoritmos para la detección de colisiones.
 
 Autor: Sergio Martí Torregrosa.
 
-## Contenido:
+## Contenido
 
 El proyecto contiene dos carpetas principales: "main" y "test":
 
