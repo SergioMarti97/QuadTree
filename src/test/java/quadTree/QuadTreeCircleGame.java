@@ -10,8 +10,8 @@ import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.ball.Ball;
+import physics.quadTree.QuadTree;
 import physics.quadTree.Rect;
-import physics.quadTree.QuadTreeContainer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,27 +19,27 @@ import java.util.Random;
 
 public class QuadTreeCircleGame extends AbstractGame {
 
-    private final int NUM_BALLS = 5000;
+    private final int NUM_BALLS = 0; // 12000
 
-    private final float MAX_SEARCH_AREA = 5000.0f;
+    private final float MAX_SEARCH_AREA = 1000f;
 
-    private final Vec2df BALL_SIZE = new Vec2df(20, 50);
+    private final Vec2df BALL_SIZE = new Vec2df(1, 30);
 
-    private final Vec2df BALL_VEL = new Vec2df(-1000, 1000);
+    private final Vec2df BALL_VEL = new Vec2df(-30, 30);
 
-    private QuadTreeContainer<Ball> treeBalls;
+    private QuadTree<Ball> treeBalls;
 
     private List<Ball> balls;
 
     private List<Pair<Ball, Ball>> collidingPairs;
 
-    private Rect arena = new Rect(0, 0, 10000, 10000);
+    private Rect arena = new Rect(0, 0, 2000, 2000);
 
     private PanAndZoom pz;
 
     private Random rnd;
 
-    private float searchSize = 500.0f;
+    private float searchSize = 5.0f;
 
     private Ball selectedBall = null;
 
@@ -47,13 +47,11 @@ public class QuadTreeCircleGame extends AbstractGame {
 
     private Vec2df mouse;
 
-    private boolean updateBalls = true;
+    private float updateTime = 0;
+
+    private boolean updateBalls = false;
 
     private boolean isDrawTree = false;
-
-    private boolean isBallSelected = false;
-
-    // Funciones
 
     private float rndFloat(float a, float b) {
         return rnd.nextFloat() * (b - a) + a;
@@ -63,40 +61,173 @@ public class QuadTreeCircleGame extends AbstractGame {
         return rndFloat(v.getX(), v.getY());
     }
 
+    private boolean doIntervalsOverlap(float x1, float x2, float y1, float y2) {
+        return Math.max(x1, y1) <= Math.min(x2, y2);
+    }
+
+    private boolean doIntervalsOverlap(Vec2df i1, Vec2df i2) {
+        return doIntervalsOverlap(i1.getX(), i1.getY(), i2.getX(), i2.getY());
+    }
+
     @Override
     public void initialize(GameApplication gc) {
         rnd = new Random();
-        treeBalls = new QuadTreeContainer<>(arena);
+        rnd.setSeed(666);
+
+        treeBalls = new QuadTree<>(arena);
         balls = new ArrayList<>();
         collidingPairs = new ArrayList<>();
 
         pz = new PanAndZoom(gc.getGraphicsContext());
-        pz.getWorldScale().set(0.04f, 0.04f);
 
         mouse = new Vec2df();
         searchRect = new Rect();
+        searchRect.setColor(Color.rgb(255, 255, 255, 0.3));
 
         for (int i = 0; i < NUM_BALLS; i++) {
             Ball b = new Ball();
 
             b.setId(i);
             b.getPos().set(rndFloat(0, arena.getSize().getX()), rndFloat(0, arena.getSize().getY()));
+            b.getVel().set(rndFloat(BALL_VEL), rndFloat(BALL_VEL));
             float radius = rndFloat(BALL_SIZE);
             b.getSize().set(radius, radius);
-            //b.getVel().set(rndFloat(BALL_VEL), rndFloat(BALL_VEL));
             b.setColor(Color.rgb(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255)));
 
             treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
-            //balls.add(b);
+            balls.add(b);
+        }
+    }
+
+    private void updateBallPosition(Ball b, float elapsedTime) {
+        // Update Velocity
+        b.getVel().addToY(1f * elapsedTime);
+
+        // Update position
+        b.getPos().addToX(b.getVel().getX() * elapsedTime);
+        b.getPos().addToY(b.getVel().getY() * elapsedTime);
+
+        // Check area collisions
+        if (b.getPos().getX() < arena.getPos().getX()) {
+            b.getPos().setX(arena.getPos().getX());
+            b.getVel().multiplyXBy(-1);
+        }
+        if (b.getPos().getX() + b.getSize().getX() >= arena.getSize().getX()) {
+            b.getPos().setX(arena.getSize().getX() - b.getSize().getX());
+            b.getVel().multiplyXBy(-1);
         }
 
+        if (b.getPos().getY() < arena.getPos().getY()) {
+            b.getPos().setY(arena.getPos().getY());
+            b.getVel().multiplyYBy(-1);
+        }
+        if (b.getPos().getY() + b.getSize().getY() >= arena.getSize().getY()) {
+            b.getPos().setY(arena.getSize().getY() - b.getSize().getY());
+            b.getVel().multiplyYBy(-1);
+        }
+    }
+
+    private void updateStaticCollisions(Ball b, float elapsedTime) {
+        // Calculate the ball area where the ball is gone
+        Rect ballArea = b.getSearchRect(1);
+
+        // For each neighbour
+        var neighbours = treeBalls.search(ballArea);
+        for (var n : neighbours) {
+            if (n.getId() != b.getId()) {
+                b.calOri();
+                b.calRadius();
+                n.calOri();
+                n.calRadius();
+
+                if (b.doCirclesOverlap(n)) {
+                    collidingPairs.add(new Pair<>(b, n));
+
+                    float dist = b.dist(n);
+
+                    float overlap = 0.5f * (dist - b.getRadius() - n.getRadius());
+
+                    if (dist == 0) {
+                        dist = 1;
+                    }
+
+                    float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
+                    float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
+
+                    b.getPos().addToX(-x);
+                    b.getPos().addToY(-y);
+
+                    Rect areaNeighbour = new Rect(n.getPos(), n.getSize());
+                    treeBalls.remove(n, areaNeighbour);
+                    n.getPos().addToX(x);
+                    n.getPos().addToY(y);
+                    treeBalls.insert(n, new Rect(n.getPos(), n.getSize()));
+                }
+            }
+        }
+    }
+
+    private void updateDynamicCollisions() {
+        for (var p : collidingPairs) {
+            Ball b1 = p.getKey();
+            Ball b2 = p.getValue();
+
+            Rect area1 = new Rect(b1.getPos(), b1.getSize());
+            treeBalls.remove(b1, area1);
+            Rect area2 = new Rect(b2.getPos(), b2.getSize());
+            treeBalls.remove(b2, area2);
+
+            b1.calOri();
+            b1.calRadius();
+            b2.calOri();
+            b2.calRadius();
+
+            // Distance between balls
+            float dist = b1.dist(b2);
+
+            if (dist == 0) {
+                dist = 1;
+            }
+
+            // Normal
+            Vec2df n = new Vec2df(b2.getOri());
+            n.sub(b1.getOri()).division(dist);
+
+            // Tangent
+            Vec2df t = (Vec2df) n.perpendicular();
+
+            // Dot Product Tangent
+            float dpTan1 = b1.getVel().dotProduct(t);
+            float dpTan2 = b2.getVel().dotProduct(t);
+
+            // Dot Product Normal
+            float dpNorm1 = b1.getVel().dotProduct(n);
+            float dpNorm2 = b2.getVel().dotProduct(n);
+
+            float b1Mass = b1.getRadius();
+            float b2Mass = b2.getRadius();
+
+            // Conservation of momentum in 1D
+            float m1 = (dpNorm1 * (b1Mass - b2Mass) + 2.0f * b2Mass * dpNorm2) / (b1Mass + b2Mass);
+            float m2 = (dpNorm2 * (b2Mass - b1Mass) + 2.0f * b1Mass * dpNorm1) / (b1Mass + b2Mass);
+
+            // Update ball b.getVelocities
+            b1.getVel().setX(t.getX() * dpTan1 + n.getX() * m1);
+            b1.getVel().setY(t.getY() * dpTan1 + n.getY() * m1);
+
+            b2.getVel().setX(t.getX() * dpTan2 + n.getX() * m2);
+            b2.getVel().setY(t.getY() * dpTan2 + n.getY() * m2);
+
+            treeBalls.insert(b1, new Rect(b1.getPos(), b1.getSize()));
+            treeBalls.insert(b2, new Rect(b2.getPos(), b2.getSize()));
+        }
     }
 
     @Override
     public void update(GameApplication gc, float elapsedTime) {
-        pz.handlePanAndZoom(gc, MouseButton.MIDDLE, 0.001f, true, true);
-
         collidingPairs.clear();
+
+        pz.handlePanAndZoom(gc, MouseButton.MIDDLE, 0.001f, true, true);
 
         if (gc.getInput().isKeyDown(KeyCode.TAB)) {
             isDrawTree = !isDrawTree;
@@ -120,20 +251,19 @@ public class QuadTreeCircleGame extends AbstractGame {
         rectOrigin.add(searchArea);
         searchArea.multiply(-2);
         searchRect.set(rectOrigin, searchArea);
-        searchRect.setColor(Color.rgb(255, 255, 255, 0.3));
 
-        if (gc.getInput().isButtonHeld(MouseButton.PRIMARY) || gc.getInput().isKeyDown(KeyCode.V)) { // gc.getInput().isButtonDown(MouseButton.PRIMARY)
+        if (gc.getInput().isButtonHeld(MouseButton.PRIMARY)) {
             Ball b = new Ball();
 
             b.setId(balls.size());
-            b.getPos().set(this.mouse.getX(),this.mouse.getY());
+            b.getPos().set(this.mouse);
+            b.getVel().set(rndFloat(BALL_VEL), rndFloat(BALL_VEL));
             float radius = rndFloat(BALL_SIZE);
             b.getSize().set(radius, radius);
-            //b.getVel().set(rndFloat(BALL_VEL), rndFloat(BALL_VEL));
             b.setColor(Color.rgb(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255)));
 
             treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
-            //balls.add(b);
+            balls.add(b);
         }
 
         if (gc.getInput().isButtonDown(MouseButton.SECONDARY)) {
@@ -143,7 +273,6 @@ public class QuadTreeCircleGame extends AbstractGame {
                     b.calOri();
                     b.calRadius();
                     if (b.getOri().dist(this.mouse) < b.getSize().getX()) {
-                        isBallSelected = true;
                         b.getVel().set(0, 0);
                         selectedBall = b;
                     }
@@ -153,10 +282,9 @@ public class QuadTreeCircleGame extends AbstractGame {
 
         if (gc.getInput().isButtonUp(MouseButton.SECONDARY)) {
             if (selectedBall != null) {
-                float velX = 1f * (selectedBall.getPos().getX() - this.mouse.getX());
-                float velY = 1f * (selectedBall.getPos().getY() - this.mouse.getY());
+                float velX = (selectedBall.getPos().getX() - this.mouse.getX());
+                float velY = (selectedBall.getPos().getY() - this.mouse.getY());
                 selectedBall.getVel().set(velX, velY);
-                isBallSelected = false;
                 selectedBall = null;
             }
         }
@@ -164,8 +292,8 @@ public class QuadTreeCircleGame extends AbstractGame {
         if (gc.getInput().isKeyHeld(KeyCode.DELETE)) {
             var toRemove = treeBalls.search(searchRect);
             for (var obj : toRemove) {
-                treeBalls.remove(obj);
-                //balls.remove(obj);
+                treeBalls.remove(obj, new Rect(obj.getPos(), obj.getSize()));
+                balls.remove(obj);
             }
         }
 
@@ -173,87 +301,23 @@ public class QuadTreeCircleGame extends AbstractGame {
             updateBalls = !updateBalls;
         }
 
-        final float resistance = -10f;
-
         if (updateBalls) {
+            long t1, t2;
+            t1 = System.nanoTime();
+            for (var b : balls) {
+                Rect ballArea = new Rect(b.getPos(), b.getSize());
+                treeBalls.remove(b, ballArea);
 
-            for (var b : treeBalls.getValues()) {
+                updateBallPosition(b, elapsedTime);
+                updateStaticCollisions(b, elapsedTime);
 
-                //boolean isRemoved = treeBalls.remove(b);
-                boolean isRemoved =  treeBalls.getRoot().remove(b, new Rect(b.getPos(), b.getSize()));
-
-                // Update velocity
-                b.getVel().addToY(-resistance * elapsedTime);
-
-                // Clamp slow velocity to 0
-                /*if (b.getVel().mag2() <= 0.001) {
-                    b.getVel().set(0, 0);
-                }*/
-
-                // Update position
-                b.getPos().addToX(b.getVel().getX() * elapsedTime);
-                b.getPos().addToY(b.getVel().getY() * elapsedTime);
-
-                // Check area collisions
-                if (b.getPos().getX() < arena.getPos().getX()) {
-                    b.getPos().setX(arena.getPos().getX());
-                    b.getVel().multiplyXBy(-1);
-                }
-                if (b.getPos().getX() + b.getSize().getX() >= arena.getSize().getX()) {
-                    b.getPos().setX(arena.getSize().getX() - b.getSize().getX());
-                    b.getVel().multiplyXBy(-1);
-                }
-
-                if (b.getPos().getY() < arena.getPos().getY()) {
-                    b.getPos().setY(arena.getPos().getY());
-                    b.getVel().multiplyYBy(-1);
-                }
-                if (b.getPos().getY() + b.getSize().getY() >= arena.getSize().getY()) {
-                    b.getPos().setY(arena.getSize().getY() - b.getSize().getY());
-                    b.getVel().multiplyYBy(-1);
-                }
-
-                // Calculate the ball area where the ball is gone
-                Rect ballArea = b.getSearchRect(1);
-                var neighbours = treeBalls.search(ballArea);
-                for (var n : neighbours) {
-                    if (b.getId() != n.getId()) {
-
-                        b.calOri();
-                        b.calRadius();
-                        n.calOri();
-                        n.calRadius();
-
-                        if (b.doCirclesOverlap(n)) {
-                            collidingPairs.add(new Pair<>(b, n));
-
-                            b.calOri();
-                            b.calRadius();
-                            n.calOri();
-                            n.calRadius();
-
-                            float dist = b.dist(n);
-                            float overlap = 0.5f * (dist - b.getRadius() - n.getRadius());
-
-                            float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
-                            float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
-
-                            b.getPos().addToX(-x);
-                            b.getPos().addToY(-y);
-
-                            n.getPos().addToX(x);
-                            n.getPos().addToY(y);
-                        }
-                    }
-                }
-
-                //treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
-                treeBalls.getRoot().insert(b, new Rect(b.getPos(), b.getSize()));
+                treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
             }
+            updateDynamicCollisions();
 
-            /*for (var p : collidingPairs) {
 
-            }*/
+            t2 = System.nanoTime();
+            updateTime = (t2 - t1) / 1000000000f;
         }
     }
 
@@ -267,36 +331,37 @@ public class QuadTreeCircleGame extends AbstractGame {
 
         // Dibujar las pelotas
         int numBallsDrawn = 0;
-        float ballsElapsedTime;
+        float drawBallsElapsedTime;
         long t1, t2;
 
         t1 = System.nanoTime();
-        for (var ball : treeBalls.search(screen)) {
-            pz.getGc().setFill(ball.getColor());
-            pz.fillOval(ball.getPos(), ball.getSize());
-            if (isDrawTree) {
-                Rect ballArea = ball.getSearchRect(1);
-                pz.getGc().setLineWidth(10);
-                pz.getGc().setStroke(Color.WHITE);
+        for (var b : treeBalls.search(screen)) {
+            pz.getGc().setFill(b.getColor());
+            pz.fillOval(b.getPos(), b.getSize());
+
+            /*if (isDrawTree) {
+                Rect ballArea = b.getSearchRect(1);
+                pz.getGc().setLineWidth(1);
+                pz.getGc().setStroke(b.getColor());
                 pz.strokeRect(ballArea.getPos(), ballArea.getSize());
-            }
+
+                b.calOri();
+                Vec2df end = new Vec2df(b.getOri());
+                end.add(b.getVel());
+                pz.getGc().setStroke(Color.WHITE);
+                pz.strokeLine(b.getOri(), end);
+            }*/
+
             numBallsDrawn++;
         }
         t2 = System.nanoTime();
-        ballsElapsedTime = (t2 - t1) / 1000000000f;
+        drawBallsElapsedTime = (t2 - t1) / 1000000000f;
 
         // Dibujar el árbol
         if (isDrawTree) {
-            pz.getGc().setLineWidth(10);
+            pz.getGc().setLineWidth(1);
             pz.getGc().setStroke(Color.WHITE);
             treeBalls.draw(pz, screen);
-        }
-
-        // Dibujar todas las pelotas
-        for (var ball : balls) {
-            pz.getGc().setLineWidth(1);
-            pz.getGc().setStroke(ball.getColor());
-            pz.strokeRect(ball.getPos(), ball.getSize());
         }
 
         // Dibujar las colisiones
@@ -325,7 +390,8 @@ public class QuadTreeCircleGame extends AbstractGame {
         // Dibujar textos
         gc.getGraphicsContext().setFill(Color.WHITE);
         gc.getGraphicsContext().fillText(String.format("Pelotas dibujadas: %d", numBallsDrawn), 10, 30);
-        gc.getGraphicsContext().fillText(String.format("Tiempo necesario: %.6f", ballsElapsedTime), 10, 50);
-        gc.getGraphicsContext().fillText(String.format("Número de colisiones: %d", collidingPairs.size()), 10, 70);
+        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para pintar las pelotas: %.6f", drawBallsElapsedTime), 10, 50);
+        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para actualizar las pelotas: %.6f milisegundos", updateTime * 1000), 10, 70);
+        gc.getGraphicsContext().fillText(String.format("Número de colisiones: %d", collidingPairs.size()), 10, 90);
     }
 }

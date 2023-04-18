@@ -16,7 +16,7 @@ import java.util.*;
 
 public class SweepAndPruneGame extends AbstractGame {
 
-    private final int NUM_BALLS = 5000;
+    private final int NUM_BALLS = 12000;
 
     private final Vec2df BALL_SIZE = new Vec2df(1, 5);
 
@@ -357,7 +357,7 @@ public class SweepAndPruneGame extends AbstractGame {
         long t1, t2;
 
         t1 = System.nanoTime();
-        float intervalWidth = 2.5f;
+        float intervalHeight = 2.5f;
         for (var b : balls) {
             Rect r = new Rect(b.getPos(), b.getSize());
             if (screen.contains(r)) {
@@ -371,7 +371,7 @@ public class SweepAndPruneGame extends AbstractGame {
                             new Vec2df(interval.getX(),
                                     arena.getPos().getY() + arena.getSize().getY()),
                             new Vec2df(interval.getY() - interval.getX(),
-                                    intervalWidth )
+                                    intervalHeight )
                     );
                 }
 

@@ -1,6 +1,7 @@
 package test;
 
 import base.GameApplication;
+import quadTree.QuadTreeCircleGame;
 import sweepAndPrune.SweepAndPruneGame;
 
 public class GameTester extends GameApplication {
@@ -9,6 +10,6 @@ public class GameTester extends GameApplication {
     public void init() throws Exception {
         super.init();
         setAppName("Test collisions");
-        setGame(new SweepAndPruneGame());
+        setGame(new QuadTreeCircleGame());
     }
 }

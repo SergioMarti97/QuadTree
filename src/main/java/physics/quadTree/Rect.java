@@ -16,8 +16,8 @@ public class Rect {
     }
 
     public Rect(Vec2df pos, Vec2df size) {
-        this.pos = pos;
-        this.size = size;
+        this.pos = new Vec2df(pos);
+        this.size = new Vec2df(size);
     }
 
     public Rect(float x, float y, float w, float h) {

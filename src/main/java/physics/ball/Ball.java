@@ -5,6 +5,8 @@ import panAndZoom.PanAndZoom;
 import javafx.scene.paint.Color;
 import physics.quadTree.Rect;
 
+import java.util.Objects;
+
 public class Ball {
 
     private int id;
@@ -129,7 +131,7 @@ public class Ball {
         // Si no se va a modificar la posición de este Rect, se puede pasar sin instanciar un nuevo vector
         ballArea.getPos().set(pos);
 
-        if (vel.getX() == 0) {
+        if (Math.abs(vel.getX()) + size.getX() / 2 < size.getX()) { // vel.getX() == 0
             ballArea.getSize().setX(size.getX());
         } else {
             float velX = vel.getX() * dt;
@@ -143,7 +145,7 @@ public class Ball {
             }
         }
 
-        if (vel.getY() == 0) {
+        if (Math.abs(vel.getY()) + size.getY() / 2 < size.getY()) { // vel.getY() == 0
             ballArea.getSize().setY(size.getY());
         } else {
             float velY = vel.getY() * dt;
@@ -210,4 +212,18 @@ public class Ball {
     public String toString() {
         return "id: " + id;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Ball)) return false;
+        Ball ball = (Ball) o;
+        return id == ball.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, pos, ori, size, radius, vel, color);
+    }
+
 }

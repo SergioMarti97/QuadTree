@@ -1,28 +1,30 @@
 package physics.quadTree;
 
+import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 
 import java.util.*;
 
+@Deprecated
 public class QuadTreeContainer<T> {
 
-    private HashMap<T, Rect> items;
+    private List<Pair<T, Rect>> items;
 
     private QuadTree<T> root;
 
     public QuadTreeContainer(Rect rect, int depth) {
         root = new QuadTree<>(rect, depth);
-        items = new HashMap<>();
+        items = new ArrayList<>();
     }
 
     public QuadTreeContainer(Rect rect) {
         root = new QuadTree<>(rect);
-        items = new HashMap<>();
+        items = new ArrayList<>();
     }
 
     public QuadTreeContainer() {
         root = new QuadTree<>();
-        items = new HashMap<>();
+        items = new ArrayList<>();
     }
 
     // ---
@@ -46,17 +48,9 @@ public class QuadTreeContainer<T> {
 
     // ---
 
-    /*public Iterator<QuadTreeItemLocation<T>> iterator() {
-        return items.iterator();
-    }*/
-
-    // ---
-
     public void insert(T item, Rect itemSize) {
-        // Rect loc = root.insert(item, itemSize);
-        // items.put(item, loc);
         root.insert(item, itemSize);
-        items.put(item, itemSize);
+        items.add(new Pair<>(item, itemSize));
     }
 
     public List<T> search(Rect rect) {
@@ -65,38 +59,47 @@ public class QuadTreeContainer<T> {
 
     public boolean remove(T itemToRemove) {
 
-        if (!items.containsKey(itemToRemove)) {
+        var p = items.stream().filter(pair -> pair.getKey().equals(itemToRemove)).findAny().orElse(null);
+
+        if (p == null) {
+            System.out.println("El elemento " + itemToRemove.toString() + " no se encuentra en los items");
             return false;
         }
 
-        Rect itemArea = items.remove(itemToRemove);
+        items.remove(p);
+        root.remove(p.getKey(), p.getValue());
 
-        if (itemArea != null) {
-            return root.remove(itemToRemove, itemArea);
-        }
         return false;
-
     }
 
-    public void relocate(T item) {
-        Rect itemArea = items.remove(item);
-        if (itemArea != null) {
-            root.remove(item, itemArea);
+    public boolean relocate(T item, Rect area) {
+        /*var p = items.stream().filter(pair -> pair.getKey().equals(item)).findFirst().orElse(null);
+        if (p == null) {
+            System.out.println("El elemento " + item.toString() + " no se encuentra en los items");
+            return false;
         }
-        insert(item, itemArea);
+
+        items.set(items.indexOf(p), new Pair<>(item, area));
+        root.remove(p.getKey(), p.getValue());
+        root.insert(item, area);
+        */
+
+        int i;
+        for (i = 0; i < items.size(); i++) {
+            var p = items.get(i);
+            if (p.getKey().equals(item)) {
+                root.remove(p.getKey(), p.getValue());
+                root.insert(item, area);
+                break;
+            }
+        }
+        items.set(i, new Pair<>(item, area));
+
+        return true;
     }
 
-    public void relocate(T item, Rect newArea) {
-        remove(item);
-        insert(item, newArea);
-    }
-
-    public Collection<T> getValues() {
-        return items.keySet();
-    }
-
-    public List<T> getItems() {
-        return root.items();
+    public List<Pair<T, Rect>> getItems() {
+        return items;
     }
 
     public QuadTree<T> getRoot() {
