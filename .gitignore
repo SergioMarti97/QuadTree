@@ -5,5 +5,5 @@
 *.csv
 QuadTreeContainer.java
 QuadTreeContainer2.java
-/test/java/measure
-/test/java/quadTree/bugs
+src/test/java/measure
+src/test/java/quadTree/bugs
