@@ -7,3 +7,4 @@ QuadTreeContainer.java
 QuadTreeContainer2.java
 src/test/java/measure
 src/test/java/quadTree/bugs
+src/test/java/quadTree/QuadTreeRectGame.java
