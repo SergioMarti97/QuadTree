@@ -1,4 +1,4 @@
-package quadTree;
+package grid;
 
 import base.AbstractGame;
 import base.GameApplication;
@@ -10,16 +10,18 @@ import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.ball.Ball;
-import physics.quadTree.QuadTree;
+import physics.grid.Grid;
 import physics.quadTree.Rect;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class QuadTreeCircleGame extends AbstractGame {
+public class GridCircleGame extends AbstractGame {
 
     private final int NUM_BALLS = 10000; // 12000
+
+    private final int NUM_COLS_AND_ROWS = 4;
 
     private final float MAX_SEARCH_AREA = 1000f;
 
@@ -27,17 +29,19 @@ public class QuadTreeCircleGame extends AbstractGame {
 
     private final Vec2df BALL_VEL = new Vec2df(-30, 30);
 
-    private QuadTree<Ball> treeBalls;
+    private Grid<Ball> ballsGrid;
 
     private List<Ball> balls;
 
     private List<Pair<Ball, Ball>> collidingPairs;
 
-    private Rect arena = new Rect(0, 0, 2000, 2000);
+    private Rect arena = new Rect(0, 0, 100, 100);
 
     private PanAndZoom pz;
 
     private Random rnd;
+
+    private Vec2df mouse;
 
     private Rect searchRect;
 
@@ -45,13 +49,11 @@ public class QuadTreeCircleGame extends AbstractGame {
 
     private Ball selectedBall = null;
 
-    private Vec2df mouse;
-
     private float updateTime = 0;
 
     private boolean updateBalls = false;
 
-    private boolean isDrawTree = false;
+    private boolean isDrawGrid = false;
 
     private int numCollisionsChecked = 0;
 
@@ -68,9 +70,10 @@ public class QuadTreeCircleGame extends AbstractGame {
         rnd = new Random();
         rnd.setSeed(123);
 
-        treeBalls = new QuadTree<>(arena);
         balls = new ArrayList<>();
         collidingPairs = new ArrayList<>();
+
+        ballsGrid = new Grid<>(arena, NUM_COLS_AND_ROWS, NUM_COLS_AND_ROWS);
 
         pz = new PanAndZoom(gc.getGraphicsContext());
 
@@ -88,8 +91,8 @@ public class QuadTreeCircleGame extends AbstractGame {
             b.getSize().set(radius, radius);
             b.setColor(Color.rgb(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255)));
 
-            treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
             balls.add(b);
+            ballsGrid.insert(b, new Rect(b.getPos(), b.getSize()));
         }
     }
 
@@ -123,7 +126,7 @@ public class QuadTreeCircleGame extends AbstractGame {
         Rect ballArea = b.getSearchRect(1);
 
         // For each neighbour
-        var neighbours = treeBalls.search(ballArea);
+        var neighbours = ballsGrid.searchFast(ballArea);
         for (var n : neighbours) {
             if (n.getId() != b.getId()) {
                 b.calOri();
@@ -151,10 +154,10 @@ public class QuadTreeCircleGame extends AbstractGame {
                     b.getPos().addToY(-y);
 
                     Rect areaNeighbour = new Rect(n.getPos(), n.getSize());
-                    treeBalls.remove(n, areaNeighbour);
+                    ballsGrid.remove(n, areaNeighbour);
                     n.getPos().addToX(x);
                     n.getPos().addToY(y);
-                    treeBalls.insert(n, new Rect(n.getPos(), n.getSize()));
+                    ballsGrid.insert(n, new Rect(n.getPos(), n.getSize()));
                 }
             }
         }
@@ -166,9 +169,9 @@ public class QuadTreeCircleGame extends AbstractGame {
             Ball b2 = p.getValue();
 
             Rect area1 = new Rect(b1.getPos(), b1.getSize());
-            treeBalls.remove(b1, area1);
+            // treeBalls.remove(b1, area1);
             Rect area2 = new Rect(b2.getPos(), b2.getSize());
-            treeBalls.remove(b2, area2);
+            // treeBalls.remove(b2, area2);
 
             b1.calOri();
             b1.calRadius();
@@ -211,21 +214,20 @@ public class QuadTreeCircleGame extends AbstractGame {
             b2.getVel().setX(t.getX() * dpTan2 + n.getX() * m2);
             b2.getVel().setY(t.getY() * dpTan2 + n.getY() * m2);
 
-            treeBalls.insert(b1, new Rect(b1.getPos(), b1.getSize()));
-            treeBalls.insert(b2, new Rect(b2.getPos(), b2.getSize()));
+            // treeBalls.insert(b1, new Rect(b1.getPos(), b1.getSize()));
+            // treeBalls.insert(b2, new Rect(b2.getPos(), b2.getSize()));
         }
     }
 
     @Override
     public void update(GameApplication gc, float elapsedTime) {
-        collidingPairs.clear();
-
         numCollisionsChecked = 0;
+        collidingPairs.clear();
 
         pz.handlePanAndZoom(gc, MouseButton.MIDDLE, 0.001f, true, true);
 
         if (gc.getInput().isKeyDown(KeyCode.TAB)) {
-            isDrawTree = !isDrawTree;
+            isDrawGrid = !isDrawGrid;
         }
 
         float inc = 10.0f;
@@ -257,13 +259,13 @@ public class QuadTreeCircleGame extends AbstractGame {
             b.getSize().set(radius, radius);
             b.setColor(Color.rgb(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255)));
 
-            treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
+            ballsGrid.insert(b, new Rect(b.getPos(), b.getSize()));
             balls.add(b);
         }
 
         if (gc.getInput().isButtonDown(MouseButton.SECONDARY)) {
             if (selectedBall == null) {
-                var toSelected = treeBalls.search(searchRect);
+                var toSelected = ballsGrid.search(searchRect);
                 for (var b : toSelected) {
                     b.calOri();
                     b.calRadius();
@@ -285,9 +287,9 @@ public class QuadTreeCircleGame extends AbstractGame {
         }
 
         if (gc.getInput().isKeyHeld(KeyCode.DELETE)) {
-            var toRemove = treeBalls.search(searchRect);
+            var toRemove = ballsGrid.search(searchRect);
             for (var obj : toRemove) {
-                treeBalls.remove(obj, new Rect(obj.getPos(), obj.getSize()));
+                ballsGrid.remove(obj, new Rect(obj.getPos(), obj.getSize()));
                 balls.remove(obj);
             }
         }
@@ -301,12 +303,12 @@ public class QuadTreeCircleGame extends AbstractGame {
             t1 = System.nanoTime();
             for (var b : balls) {
                 Rect ballArea = new Rect(b.getPos(), b.getSize());
-                treeBalls.remove(b, ballArea);
+                ballsGrid.remove(b, ballArea);
 
                 updateBallPosition(b, elapsedTime);
                 updateStaticCollisions(b, elapsedTime);
 
-                treeBalls.insert(b, new Rect(b.getPos(), b.getSize()));
+                ballsGrid.insert(b, new Rect(b.getPos(), b.getSize()));
             }
             updateDynamicCollisions();
 
@@ -323,28 +325,20 @@ public class QuadTreeCircleGame extends AbstractGame {
         gc.getGraphicsContext().setFill(Color.BLACK);
         pz.fillRect(screen.getPos(), screen.getSize());
 
+        // Dibujar el marco de la arena
+        pz.getGc().setStroke(Color.WHITE);
+        pz.getGc().setLineWidth(1);
+        pz.strokeRect(arena.getPos(), arena.getSize());
+
         // Dibujar las pelotas
         int numBallsDrawn = 0;
         float drawBallsElapsedTime;
         long t1, t2;
 
         t1 = System.nanoTime();
-        for (var b : treeBalls.search(screen)) {
+        for (var b : ballsGrid.search(screen)) {
             pz.getGc().setFill(b.getColor());
             pz.fillOval(b.getPos(), b.getSize());
-
-            /*if (isDrawTree) {
-                Rect ballArea = b.getSearchRect(1);
-                pz.getGc().setLineWidth(1);
-                pz.getGc().setStroke(b.getColor());
-                pz.strokeRect(ballArea.getPos(), ballArea.getSize());
-
-                b.calOri();
-                Vec2df end = new Vec2df(b.getOri());
-                end.add(b.getVel());
-                pz.getGc().setStroke(Color.WHITE);
-                pz.strokeLine(b.getOri(), end);
-            }*/
 
             numBallsDrawn++;
         }
@@ -352,12 +346,11 @@ public class QuadTreeCircleGame extends AbstractGame {
         drawBallsElapsedTime = (t2 - t1) / 1000000000f;
 
         // Dibujar el árbol
-        pz.getGc().setLineWidth(1);
-        pz.getGc().setStroke(Color.WHITE);
-        if (isDrawTree) {
-            treeBalls.draw(pz, screen);
-        } else {
-            pz.strokeRect(arena.getPos(), arena.getSize());
+        if (isDrawGrid) {
+            pz.getGc().setLineWidth(1);
+            pz.getGc().setStroke(Color.WHITE);
+            pz.getGc().setFill(Color.WHITE);
+            ballsGrid.draw(pz, screen);
         }
 
         // Dibujar las colisiones
@@ -385,15 +378,11 @@ public class QuadTreeCircleGame extends AbstractGame {
 
         // Dibujar textos
         gc.getGraphicsContext().setFill(Color.WHITE);
-        gc.getGraphicsContext().fillText(String.format("Algorithm QuadTree"), 10, 30);
+        gc.getGraphicsContext().fillText(String.format("Algorithm Grid"), 10, 30);
         gc.getGraphicsContext().fillText(String.format("Balls drawn: %d", numBallsDrawn), 10, 50);
         gc.getGraphicsContext().fillText(String.format("Time needed to draw: %.6fms", drawBallsElapsedTime * 1000), 10, 70);
         gc.getGraphicsContext().fillText(String.format("Time needed to update: %.6fms", updateTime * 1000), 10, 90);
         gc.getGraphicsContext().fillText(String.format("Number of checks: %d", numCollisionsChecked), 10, 110);
         gc.getGraphicsContext().fillText(String.format("Number of collisions: %d", collidingPairs.size()), 10, 130);
-
-
-        // todo borrar
-        gc.getGraphicsContext().fillText(String.format("Zoom: %s Pan: %s", pz.getWorldScale(), pz.getWorldOffset()), 10, 150);
     }
 }

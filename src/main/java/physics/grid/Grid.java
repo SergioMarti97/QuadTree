@@ -2,71 +2,37 @@ package physics.grid;
 
 import base.vectors.points2d.Vec2df;
 import base.vectors.points2d.Vec2di;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
+import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
+import physics.quadTree.Rect;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashSet;
+import java.util.Set;
 
-public class Grid {
+public class Grid<T> {
 
-    private final Cell[] cells;
+    private Cell[] cells;
 
     private final int numRows;
 
     private final int numCols;
 
-    // Num rows and cols no data
-
-    public Grid(float posX, float posY, float width, float height, float cellW, float cellH) {
-        this.numCols = (int)(width / cellW);
-        this.numRows = (int)(height / cellH);
-        Vec2df cellSize = new Vec2df(cellW, cellH);
-        Vec2df inc = new Vec2df(posX, posY);
-        int id = 0;
-        cells = new Cell[numRows * numCols];
-        for (int x = 0; x < numCols; x++) {
-            for (int y = 0; y < numRows; y++) {
-                setCell(x, y,
-                        new Cell(
-                                id,
-                                new Vec2di(x, y),
-                                new Vec2df(inc),
-                                new Vec2df(cellSize)
-                        )
-                );
-                inc.addToY(cellSize.getY());
-                id++;
-            }
-            inc.setY(posY);
-            inc.addToX(cellSize.getX());
-        }
-    }
-
-    public Grid(float width, float height, float cellW, float cellH) {
-        this(0, 0, width, height, cellW, cellH);
-    }
-
-    public Grid(Vec2df size, Vec2df cellSize) {
-        this(size.getX(), size.getY(), cellSize.getX(), cellSize.getY());
-    }
-
-    public Grid(Vec2df ori, Vec2df size, Vec2df cellSize) {
-        this(ori.getX(), ori.getY(), size.getX(), size.getY(), cellSize.getX(), cellSize.getY());
-    }
-
-    // Cell Width and height no data
-
     public Grid(float posX, float posY, float width, float height, int numRows, int numCols) {
         this.numRows = numRows;
         this.numCols = numCols;
+        resize(posX, posY, width, height);
+    }
 
+    public Grid(Rect area, int numRows, int numCols) {
+        this(area.getPos().getX(), area.getPos().getY(), area.getSize().getX(), area.getSize().getY(), numRows, numCols);
+    }
+
+    // Mehtods
+
+    public void resize(float posX, float posY, float width, float height) {
         Vec2df cellSize = new Vec2df(
                 height / this.numRows,
-                width/ this.numCols
+                width / this.numCols
         );
         Vec2df inc = new Vec2df(posX, posY);
         int id = 0;
@@ -74,14 +40,8 @@ public class Grid {
         cells = new Cell[this.numRows * this.numCols];
         for (int x = 0; x < this.numCols; x++) {
             for (int y = 0; y < this.numRows; y++) {
-                setCell(x, y,
-                        new Cell(
-                            id,
-                            new Vec2di(x, y),
-                            new Vec2df(inc),
-                            new Vec2df(cellSize)
-                        )
-                );
+                Rect cellArea = new Rect(new Vec2df(inc), new Vec2df(cellSize));
+                setCell(x, y, new Cell(id, new Vec2di(x, y), cellArea));
                 inc.addToY(cellSize.getY());
                 id++;
             }
@@ -90,59 +50,124 @@ public class Grid {
         }
     }
 
-    public Grid(float width, float height, int rows, int numCols) {
-        this(0, 0, width, height, rows, numCols);
+    public void clear() {
+        for (var c : cells) {
+            c.clear();
+        }
     }
 
-    public Grid(Vec2df ori, Vec2df size, Vec2di rowAndCols) {
-        this(ori.getX(), ori.getY(), size.getX(), size.getY(), rowAndCols.getX(), rowAndCols.getY());
+    public int size() {
+        int count = 0;
+        for (var c : cells) {
+            count += c.size();
+        }
+        return count;
     }
 
-    public Grid(Vec2df size, Vec2di rowAndCols) {
-        this(size.getX(), size.getY(), rowAndCols.getX(), rowAndCols.getY());
-    }
-
-    // Draw method
-
-    public void draw(PanAndZoom pz) {
-        List<Cell> cells = Arrays.stream(this.cells).sorted(Comparator.comparingInt(Cell::getZIndex)).collect(Collectors.toList());
-
-        for (Cell c : cells) {
-            if (c.isChecking()) {
-                Paint strokeBefore = pz.getGc().getStroke();
-                double lineThick = pz.getGc().getLineWidth();
-                Paint fillBefore = pz.getGc().getFill();
-
-                pz.getGc().setStroke(Color.YELLOW);
-                pz.getGc().setLineWidth(2);
-                pz.getGc().setFill(Color.YELLOW);
-
-                c.draw(pz);
-
-                pz.getGc().setStroke(strokeBefore);
-                pz.getGc().setLineWidth(lineThick);
-                pz.getGc().setFill(fillBefore);
-            } else {
-                c.draw(pz);
+    public void insert(T item, Rect itemSize) {
+        for (var c : cells) {
+            if (c.getRect().overlaps(itemSize)) {
+                c.getItems().add(new Pair<>(itemSize, item));
+                return;
             }
         }
     }
 
-    // Getters
+    public Set<T> search(Rect area) {
+        Set<T> setItems = new HashSet<>();
+        for (Cell<T> c : cells) {
+            if (!c.isEmpty()) {
+                if (area.contains(c.getRect())) {
+                    c.items(setItems);
+                } else {
+                    for (Pair<Rect, T> p : c.getItems()) {
+                        if (area.overlaps(p.getKey())) {
+                            setItems.add(p.getValue());
+                        }
+                    }
+                }
+            }
+        }
+        return setItems;
+    }
 
-    public synchronized Cell[] getCells() {
+    public Set<T> searchFast(Rect area) {
+        Set<T> set = new HashSet<>();
+
+        Cell<T> cell = null;
+        for (Cell<T> c : cells) {
+            if (!c.isEmpty()) {
+                if (area.overlaps(c.getRect())) {
+                    cell = c;
+                    break;
+                }
+            }
+        }
+
+        if (cell != null) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    Cell<T> n = getNeighbour(cell.getPos(), i, j);
+                    if (n != null) {
+                        if (!n.isEmpty()) {
+                            if (area.contains(n.getRect())) {
+                                n.items(set);
+                            } else {
+                                for (Pair<Rect, T> p : n.getItems()) {
+                                    if (area.overlaps(p.getKey())) {
+                                        set.add(p.getValue());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return set;
+    }
+
+    public boolean remove(T itemToRemove, Rect loc) {
+        for (Cell<T> c : cells) {
+            if (c.getRect().overlaps(loc)) {
+                return c.getItems().removeIf(p -> p.getValue().equals(itemToRemove));
+            }
+        }
+        return false;
+    }
+
+    // Draw yourself method
+
+    public void draw(PanAndZoom pz, Rect screen) {
+        for (var c : cells) {
+            if (screen.contains(c.getRect())) {
+                if (!c.isEmpty()) {
+                    c.draw(pz);
+                }
+            }
+        }
+    }
+
+    // Getters and Setters
+
+    public Cell<T>[] getCells() {
         return cells;
     }
 
-    public Cell getCell(int i) {
-        return cells[i];
+    public Cell<T> getCell(int id) {
+        return cells[id];
     }
 
-    public Cell getCell(int x, int y) {
+    public Cell<T> getCell(int x, int y) {
         return cells[x + numCols * y];
     }
 
-    public Cell getNeighbour(int positionX, int positionY, int i, int j) {
+    public void setCell(int x, int y, Cell<T> c) {
+        cells[x + numCols * y] = c; // todo ????
+    }
+
+    public Cell<T> getNeighbour(int positionX, int positionY, int i, int j) {
         int finalX = positionX + i;
         int finalY = positionY + j;
         if ( finalX < numCols && finalY < numRows && finalX >= 0 && finalY >= 0 ) {
@@ -156,12 +181,8 @@ public class Grid {
         return null;
     }
 
-    public Cell getNeighbour(Vec2di pos, int addX, int addY) {
+    public Cell<T> getNeighbour(Vec2di pos, int addX, int addY) {
         return getNeighbour(pos.getX(), pos.getY(), addX, addY);
-    }
-
-    public void setCell(int x, int y, Cell c) {
-        cells[x + numCols * y] = c; // todo ????
     }
 
     public int getNumRows() {
@@ -171,4 +192,5 @@ public class Grid {
     public int getNumCols() {
         return numCols;
     }
+
 }

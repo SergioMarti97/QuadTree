@@ -1,6 +1,7 @@
 package test;
 
 import base.GameApplication;
+import grid.GridCircleGame;
 import quadTree.QuadTreeCircleGame;
 import sweepAndPrune.SweepAndPruneGame;
 

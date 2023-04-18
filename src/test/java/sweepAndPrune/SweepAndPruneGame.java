@@ -16,9 +16,9 @@ import java.util.*;
 
 public class SweepAndPruneGame extends AbstractGame {
 
-    private final int NUM_BALLS = 12000;
+    private final int NUM_BALLS = 10000;
 
-    private final Vec2df BALL_SIZE = new Vec2df(1, 5);
+    private final Vec2df BALL_SIZE = new Vec2df(5, 10);
 
     private final Vec2df BALL_VEL = new Vec2df(-30, 30);
 
@@ -353,7 +353,7 @@ public class SweepAndPruneGame extends AbstractGame {
 
         // Dibujar las pelotas
         int numBallsDrawn = 0;
-        float ballsElapsedTime;
+        float drawBallsElapsedTime;
         long t1, t2;
 
         t1 = System.nanoTime();
@@ -379,7 +379,7 @@ public class SweepAndPruneGame extends AbstractGame {
             }
         }
         t2 = System.nanoTime();
-        ballsElapsedTime = (t2 - t1) / 1000000000f;
+        drawBallsElapsedTime = (t2 - t1) / 1000000000f;
 
         // Dibujar las colisiones
         for (var p : collidingPairs) {
@@ -416,12 +416,11 @@ public class SweepAndPruneGame extends AbstractGame {
 
         // Dibujar textos
         gc.getGraphicsContext().setFill(Color.WHITE);
-        gc.getGraphicsContext().fillText(String.format("Pelotas dibujadas: %d", numBallsDrawn), 10, 30);
-        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para dibujar las pelotas: %.6f milisegundos", ballsElapsedTime * 1000), 10, 50);
-        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para actualizar las pelotas: %.6f milisegundos", updateTime * 1000), 10, 70);
-        gc.getGraphicsContext().fillText(String.format("Número de comprobaciones realizadas: %d", numCollisionsChecked), 10, 90);
-        gc.getGraphicsContext().fillText(String.format("Número de colisiones: %d", collidingPairs.size()), 10, 110);
-        gc.getGraphicsContext().fillText(String.format("Algoritmo \"Sweep and prune\": %b (TAB)", doSweepAndPrune), 10, 130);
-        gc.getGraphicsContext().fillText(String.format("Dibujar la interfaz de \"Sweep and prune\": %b (D)", drawSweepAndPrune), 10, 150);
+        gc.getGraphicsContext().fillText(String.format("Algorithm " + (doSweepAndPrune ? "Sweep And Prune (SAP)" : "All vs All")), 10, 30);
+        gc.getGraphicsContext().fillText(String.format("Balls drawn: %d", numBallsDrawn), 10, 50);
+        gc.getGraphicsContext().fillText(String.format("Time needed to draw: %.6fms", drawBallsElapsedTime * 1000), 10, 70);
+        gc.getGraphicsContext().fillText(String.format("Time needed to update: %.6fms", updateTime * 1000), 10, 90);
+        gc.getGraphicsContext().fillText(String.format("Number of checks: %d", numCollisionsChecked), 10, 110);
+        gc.getGraphicsContext().fillText(String.format("Number of collisions: %d", collidingPairs.size()), 10, 130);
     }
 }
