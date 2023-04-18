@@ -9,8 +9,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
-import physics.quadTree.Rect;
-import physics.quadTree.QuadTreeContainer;
+import physics.spaceDivision.Rect;
+import physics.spaceDivision.quadTree.QuadTreeContainer;
 
 import java.util.ArrayList;
 import java.util.List;

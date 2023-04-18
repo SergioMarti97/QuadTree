@@ -8,8 +8,8 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
-import physics.quadTree.Rect;
-import physics.quadTree.QuadTreeContainer;
+import physics.spaceDivision.Rect;
+import physics.spaceDivision.quadTree.QuadTreeContainer;
 
 import java.util.Random;
 
@@ -151,7 +151,7 @@ public class QuadTreeRectGame extends AbstractGame {
                 Vec2df textPos = pz.worldToScreen(obj.getPos());
 
                 String str = obj.toString();
-                str = str.replace("physics.quadTree.Rect", "");
+                str = str.replace("physics.spaceDivision.Rect", "");
                 gc.getGraphicsContext().fillText(str, textPos.getX(), textPos.getY());
             }
         }

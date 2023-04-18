@@ -1,10 +1,10 @@
-package physics.grid;
+package physics.spaceDivision.grid;
 
 import base.vectors.points2d.Vec2df;
 import base.vectors.points2d.Vec2di;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
-import physics.quadTree.Rect;
+import physics.spaceDivision.Rect;
 
 import java.util.HashSet;
 import java.util.Set;

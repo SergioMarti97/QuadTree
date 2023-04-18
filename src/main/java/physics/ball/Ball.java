@@ -3,7 +3,7 @@ package physics.ball;
 import base.vectors.points2d.Vec2df;
 import panAndZoom.PanAndZoom;
 import javafx.scene.paint.Color;
-import physics.quadTree.Rect;
+import physics.spaceDivision.Rect;
 
 import java.util.Objects;
 

@@ -10,7 +10,7 @@ import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.ball.Ball;
-import physics.quadTree.Rect;
+import physics.spaceDivision.Rect;
 
 import java.util.*;
 

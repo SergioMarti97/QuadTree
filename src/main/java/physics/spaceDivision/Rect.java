@@ -1,4 +1,4 @@
-package physics.quadTree;
+package physics.spaceDivision;
 
 import base.vectors.points2d.Vec2df;
 import javafx.scene.paint.Color;

@@ -1,14 +1,11 @@
-package physics.grid;
+package physics.spaceDivision.grid;
 
-import base.vectors.points2d.Vec2df;
 import base.vectors.points2d.Vec2di;
-import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
-import physics.quadTree.Rect;
+import physics.spaceDivision.Rect;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class Cell<T> {

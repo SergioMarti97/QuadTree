@@ -8,7 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import physics.ball.Ball;
-import physics.quadTree.Rect;
+import physics.spaceDivision.Rect;
 
 import java.io.File;
 import java.io.IOException;
