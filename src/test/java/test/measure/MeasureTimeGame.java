@@ -1,26 +1,31 @@
-package sweepAndPrune;
+package test.measure;
 
 import base.AbstractGame;
 import base.GameApplication;
 import base.vectors.points2d.Vec2df;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
-import panAndZoom.PanAndZoomUtils;
 import physics.ball.Ball;
 import physics.spaceDivision.Rect;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
-public class SweepAndPruneGame extends AbstractGame {
+public class MeasureTimeGame extends AbstractGame {
 
-    private final int NUM_BALLS = 10000;
+    private List<Pair<Integer, Vec2df>> numBalls = new ArrayList<>();
+
+    private List<Float> meanElapsedTime = new ArrayList<>();
+
+    private float meanDt = 0;
 
     private final Vec2df BALL_SIZE = new Vec2df(5, 10);
 
-    private final Vec2df BALL_VEL = new Vec2df(-30, 30);
+    private final Vec2df BALL_VEL = new Vec2df(-50, 50);
 
     private List<Ball> balls;
 
@@ -28,25 +33,19 @@ public class SweepAndPruneGame extends AbstractGame {
 
     private List<Pair<Ball, Ball>> posibleCollidingPairs;
 
-    private final Rect arena = new Rect(0, 0, 2000, 2000);
+    private Rect arena = new Rect(0, 0, 50, 50);
 
     private PanAndZoom pz;
 
     private Random rnd;
 
-    private Ball selectedBall = null;
-
-    private Vec2df mouse;
-
     private float updateTime = 0;
 
-    private boolean updateBalls = false;
+    private final int NUM_FRAMES = 2500;
 
-    private boolean doSweepAndPrune = false;
+    private int numFrames = 0;
 
-    private boolean drawSweepAndPrune = false;
-
-    private int numCollisionsChecked = 0;
+    private int count = 0;
 
     // Funciones
 
@@ -66,20 +65,15 @@ public class SweepAndPruneGame extends AbstractGame {
         return doIntervalsOverlap(i1.getX(), i1.getY(), i2.getX(), i2.getY());
     }
 
-    @Override
-    public void initialize(GameApplication gc) {
-        rnd = new Random();
-        rnd.setSeed(1234);
+    private void initializeBalls() {
+        float numBalls = this.numBalls.get(count).getKey();
+        arena.getSize().set(this.numBalls.get(count).getValue());
+        initializeBalls((int) numBalls);
+    }
 
-        balls = new ArrayList<>();
-        collidingPairs = new ArrayList<>();
-        posibleCollidingPairs = new ArrayList<>();
-
-        pz = new PanAndZoom(gc.getGraphicsContext());
-
-        mouse = new Vec2df();
-
-        for (int i = 0; i < NUM_BALLS; i++) {
+    private void initializeBalls(int numBalls) {
+        balls.clear();
+        for (int i = 0; i < numBalls; i++) {
             Ball b = new Ball();
 
             b.setId(i);
@@ -93,7 +87,33 @@ public class SweepAndPruneGame extends AbstractGame {
         }
     }
 
-    private void updateBallPosition(float elapsedTime) {
+    @Override
+    public void initialize(GameApplication gc) {
+        rnd = new Random();
+        rnd.setSeed(69);
+
+        balls = new ArrayList<>();
+        collidingPairs = new ArrayList<>();
+        posibleCollidingPairs = new ArrayList<>();
+
+        pz = new PanAndZoom(gc.getGraphicsContext());
+
+        numBalls.add(new Pair<>(2, new Vec2df(50, 50)));
+        numBalls.add(new Pair<>(5, new Vec2df(75, 75)));
+        numBalls.add(new Pair<>(10, new Vec2df(100, 100)));
+        numBalls.add(new Pair<>(20, new Vec2df(120, 120)));
+        numBalls.add(new Pair<>(50, new Vec2df(200, 200)));
+        numBalls.add(new Pair<>(100, new Vec2df(250, 250)));
+        numBalls.add(new Pair<>(200, new Vec2df(300, 300)));
+        numBalls.add(new Pair<>(500, new Vec2df(500, 500)));
+        numBalls.add(new Pair<>(1000, new Vec2df(1000, 1000)));
+        numBalls.add(new Pair<>(2000, new Vec2df(2000, 2000)));
+        numBalls.add(new Pair<>(100, new Vec2df(250, 250)));
+
+        initializeBalls();
+    }
+
+    private void updateBalls(float elapsedTime) {
         for (var b : balls) {
             // Update position
             b.getPos().addToX(b.getVel().getX() * elapsedTime);
@@ -120,45 +140,8 @@ public class SweepAndPruneGame extends AbstractGame {
         }
     }
 
-    private void updateStaticCollisionsAllVsAll() {
-        for (var b : balls) {
-            for (var n : balls) {
-                if (b.getId() != n.getId()) {
-
-                    b.calOri();
-                    b.calRadius();
-                    n.calOri();
-                    n.calRadius();
-
-                    numCollisionsChecked++;
-
-                    if (b.doCirclesOverlap(n)) {
-                        collidingPairs.add(new Pair<>(b, n));
-
-                        float dist = b.dist(n);
-
-                        float overlap = 0.5f * (dist - b.getRadius() - n.getRadius());
-
-                        if (dist == 0) {
-                            dist = 1;
-                        }
-
-                        float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
-                        float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
-
-                        b.getPos().addToX(-x);
-                        b.getPos().addToY(-y);
-
-                        n.getPos().addToX(x);
-                        n.getPos().addToY(y);
-                    }
-                }
-            }
-        }
-    }
-
-    private void updateStaticCollisionsSweepAndPrune() {
-        // Sort balls
+    private void sweepAndPrune() {
+        // Calcule intervals
         balls.sort((b1, b2) -> Float.compare(b1.getPos().getX(), b2.getPos().getX()));
 
         // Sweep and Prune Algorithm
@@ -186,7 +169,7 @@ public class SweepAndPruneGame extends AbstractGame {
             activeBalls.add(b);
         }
 
-        // Check Collisions
+        // Check collisions
         for (var p : posibleCollidingPairs) {
             Ball b = p.getKey();
             Ball n = p.getValue();
@@ -195,8 +178,6 @@ public class SweepAndPruneGame extends AbstractGame {
             b.calRadius();
             n.calOri();
             n.calRadius();
-
-            numCollisionsChecked++;
 
             if (b.doCirclesOverlap(n)) {
                 collidingPairs.add(new Pair<>(b, n));
@@ -217,6 +198,40 @@ public class SweepAndPruneGame extends AbstractGame {
 
                 n.getPos().addToX(x);
                 n.getPos().addToY(y);
+            }
+        }
+    }
+
+    private void allVsAll() {
+        for (Ball b : balls) {
+            for (Ball n : balls) {
+                if (b.getId() != n.getId()) {
+                    b.calOri();
+                    b.calRadius();
+                    n.calOri();
+                    n.calRadius();
+
+                    if (b.doCirclesOverlap(n)) {
+                        collidingPairs.add(new Pair<>(b, n));
+
+                        float dist = b.dist(n);
+
+                        float overlap = 0.5f * (dist - b.getRadius() - n.getRadius());
+
+                        if (dist == 0) {
+                            dist = 1;
+                        }
+
+                        float x = overlap * (b.getOri().getX() - n.getOri().getX()) / dist;
+                        float y = overlap * (b.getOri().getY() - n.getOri().getY()) / dist;
+
+                        b.getPos().addToX(-x);
+                        b.getPos().addToY(-y);
+
+                        n.getPos().addToX(x);
+                        n.getPos().addToY(y);
+                    }
+                }
             }
         }
     }
@@ -274,67 +289,50 @@ public class SweepAndPruneGame extends AbstractGame {
         collidingPairs.clear();
         posibleCollidingPairs.clear();
 
-        numCollisionsChecked = 0;
-
         pz.handlePanAndZoom(gc, MouseButton.MIDDLE, 0.001f, true, true);
 
-        Vec2df mouse = new Vec2df((float)gc.getInput().getMouseX(), (float)gc.getInput().getMouseY());
-        this.mouse.set(PanAndZoomUtils.screenToWorld(mouse, pz.getWorldOffset(), pz.getWorldScale()));
+        long t1, t2;
 
-        if (gc.getInput().isButtonDown(MouseButton.SECONDARY)) {
-            if (selectedBall == null) {
-                for (var b : balls) {
-                    b.calOri();
-                    b.calRadius();
-                    if (b.getOri().dist(this.mouse) < b.getSize().getX()) {
-                        b.getVel().set(0, 0);
-                        selectedBall = b;
+        t1 = System.nanoTime();
+
+        // Update balls position
+        updateBalls(elapsedTime);
+
+        // Resolve static collisions
+        // allVsAll();
+        sweepAndPrune();
+
+        // Resolve dynamic collisions
+        updateDynamicCollisions();
+
+        t2 = System.nanoTime();
+        updateTime = (t2 - t1) / 1000000000f;
+        meanDt += updateTime;
+
+        if (numFrames >= NUM_FRAMES) {
+            if (count < numBalls.size()) {
+                count++;
+                meanElapsedTime.add(meanDt / numFrames);
+                numFrames = 0;
+                initializeBalls();
+            } else {
+                try {
+                    File f = new File("C:\\Users\\Sergio\\IdeaProjects\\JAVAFX\\javafx-predator-prey-simulation\\src\\test\\java\\quadTree\\measure\\output.csv");
+                    try (PrintWriter pw = new PrintWriter(f)) {
+                        pw.println("numBalls;ElapsedTime");
+                        for (int i = 0; i < meanElapsedTime.size(); i++) {
+                            Integer numBalls = this.numBalls.get(i).getKey();
+                            Float dt = meanElapsedTime.get(i);
+                            pw.println(String.format("%d;%f", numBalls, dt));
+                        }
+                        System.out.println("Data output writted!!");
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-        }
-
-        if (gc.getInput().isButtonUp(MouseButton.SECONDARY)) {
-            if (selectedBall != null) {
-                final Vec2df multiplier = new Vec2df(1);
-                float velX = multiplier.getX() * (selectedBall.getPos().getX() - this.mouse.getX());
-                float velY = multiplier.getY() * (selectedBall.getPos().getY() - this.mouse.getY());
-                selectedBall.getVel().set(velX, velY);
-                selectedBall = null;
-            }
-        }
-
-        if (gc.getInput().isKeyDown(KeyCode.D)) {
-            drawSweepAndPrune = !drawSweepAndPrune;
-        }
-
-        if (gc.getInput().isKeyDown(KeyCode.SPACE)) {
-            updateBalls = !updateBalls;
-        }
-
-        if (gc.getInput().isKeyDown(KeyCode.TAB)) {
-            doSweepAndPrune = !doSweepAndPrune;
-        }
-
-        if (updateBalls) {
-            long t1, t2;
-            t1 = System.nanoTime();
-
-            // Update ball position
-            updateBallPosition(elapsedTime);
-
-            // Check collisions
-            if (doSweepAndPrune) {
-                updateStaticCollisionsSweepAndPrune();
-            } else {
-                updateStaticCollisionsAllVsAll();
-            }
-
-            // Resolve dynamic collisions
-            updateDynamicCollisions();
-
-            t2 = System.nanoTime();
-            updateTime = (t2 - t1) / 1000000000f;
         }
     }
 
@@ -353,74 +351,28 @@ public class SweepAndPruneGame extends AbstractGame {
 
         // Dibujar las pelotas
         int numBallsDrawn = 0;
-        float drawBallsElapsedTime;
+        float ballsElapsedTime;
         long t1, t2;
 
         t1 = System.nanoTime();
-        float intervalHeight = 2.5f;
         for (var b : balls) {
             Rect r = new Rect(b.getPos(), b.getSize());
             if (screen.contains(r)) {
                 pz.getGc().setFill(b.getColor());
                 pz.fillOval(b.getPos(), b.getSize());
-
-                if (drawSweepAndPrune) {
-                    // Dibujar los intervalos
-                    Vec2df interval = new Vec2df(b.getPos().getX(), b.getPos().getX() + b.getSize().getX());
-                    pz.fillRect(
-                            new Vec2df(interval.getX(),
-                                    arena.getPos().getY() + arena.getSize().getY()),
-                            new Vec2df(interval.getY() - interval.getX(),
-                                    intervalHeight )
-                    );
-                }
-
                 numBallsDrawn++;
             }
         }
         t2 = System.nanoTime();
-        drawBallsElapsedTime = (t2 - t1) / 1000000000f;
-
-        // Dibujar las colisiones
-        for (var p : collidingPairs) {
-            Ball b1 = p.getKey();
-            Ball b2 = p.getValue();
-            pz.getGc().setLineWidth(1);
-            pz.getGc().setStroke(Color.RED);
-            b1.calOri();
-            b2.calOri();
-            pz.strokeLine(b1.getOri(), b2.getOri());
-        }
-
-        // Dibujar los posibles pares de pelotas en colisión
-        if (drawSweepAndPrune) {
-            for (var p : posibleCollidingPairs) {
-                Ball b1 = p.getKey();
-                Ball b2 = p.getValue();
-
-                pz.getGc().setStroke(b1.getColor());
-                pz.strokeRect(b1.getPos(), b1.getSize());
-
-                pz.getGc().setStroke(b2.getColor());
-                pz.strokeRect(b2.getPos(), b2.getSize());
-            }
-        }
-
-        // Dibujar la línea pelota-ratón de la pelota seleccionada
-        if (selectedBall != null) {
-            pz.getGc().setLineWidth(1);
-            pz.getGc().setStroke(Color.WHITE);
-            selectedBall.calOri();
-            pz.strokeLine(selectedBall.getOri(), mouse);
-        }
+        ballsElapsedTime = (t2 - t1) / 1000000000f;
 
         // Dibujar textos
         gc.getGraphicsContext().setFill(Color.WHITE);
-        gc.getGraphicsContext().fillText(String.format("Algorithm " + (doSweepAndPrune ? "Sweep And Prune (SAP)" : "All vs All")), 10, 30);
-        gc.getGraphicsContext().fillText(String.format("Balls drawn: %d", numBallsDrawn), 10, 50);
-        gc.getGraphicsContext().fillText(String.format("Time needed to draw: %.6fms", drawBallsElapsedTime * 1000), 10, 70);
-        gc.getGraphicsContext().fillText(String.format("Time needed to update: %.6fms", updateTime * 1000), 10, 90);
-        gc.getGraphicsContext().fillText(String.format("Number of checks: %d", numCollisionsChecked), 10, 110);
-        gc.getGraphicsContext().fillText(String.format("Number of collisions: %d", collidingPairs.size()), 10, 130);
+        gc.getGraphicsContext().fillText(String.format("Pelotas dibujadas: %d", numBallsDrawn), 10, 30);
+        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para dibujar las pelotas: %.6f milisegundos", ballsElapsedTime * 1000), 10, 50);
+        gc.getGraphicsContext().fillText(String.format("Tiempo necesario para actualizar las pelotas: %.6f milisegundos", updateTime * 1000), 10, 70);
+        gc.getGraphicsContext().fillText(String.format("Frames calculados: %d", numFrames), 10, 90);
+
+        numFrames++;
     }
 }

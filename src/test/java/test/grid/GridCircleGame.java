@@ -1,4 +1,4 @@
-package grid;
+package test.grid;
 
 import base.AbstractGame;
 import base.GameApplication;
@@ -19,9 +19,9 @@ import java.util.Random;
 
 public class GridCircleGame extends AbstractGame {
 
-    private final int NUM_BALLS = 10000; // 12000
+    private final int NUM_BALLS = 1000; // 12000
 
-    private final int NUM_COLS_AND_ROWS = 4;
+    private final int NUM_COLS_AND_ROWS = 30;
 
     private final float MAX_SEARCH_AREA = 1000f;
 
@@ -35,7 +35,7 @@ public class GridCircleGame extends AbstractGame {
 
     private List<Pair<Ball, Ball>> collidingPairs;
 
-    private Rect arena = new Rect(0, 0, 100, 100);
+    private Rect arena = new Rect(0, 0, 2000, 2000);
 
     private PanAndZoom pz;
 
@@ -76,6 +76,8 @@ public class GridCircleGame extends AbstractGame {
         ballsGrid = new Grid<>(arena, NUM_COLS_AND_ROWS, NUM_COLS_AND_ROWS);
 
         pz = new PanAndZoom(gc.getGraphicsContext());
+        pz.getWorldScale().set(0.370f, 0.370f);
+        pz.getWorldOffset().set(-1825f, -80f);
 
         mouse = new Vec2df();
         searchRect = new Rect();
@@ -345,7 +347,7 @@ public class GridCircleGame extends AbstractGame {
         t2 = System.nanoTime();
         drawBallsElapsedTime = (t2 - t1) / 1000000000f;
 
-        // Dibujar el árbol
+        // Dibujar la regilla
         if (isDrawGrid) {
             pz.getGc().setLineWidth(1);
             pz.getGc().setStroke(Color.WHITE);

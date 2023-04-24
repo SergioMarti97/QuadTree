@@ -1,10 +1,13 @@
 .idea
+/out
 /target
 *.iml
 .DS_Store
 *.csv
 *.png
 *.xcf
+*.pdf
+*.txt
 QuadTreeContainer.java
 QuadTreeContainer2.java
 src/test/java/measure

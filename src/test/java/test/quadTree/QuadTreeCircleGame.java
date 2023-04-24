@@ -1,4 +1,4 @@
-package quadTree;
+package test.quadTree;
 
 import base.AbstractGame;
 import base.GameApplication;
@@ -73,6 +73,8 @@ public class QuadTreeCircleGame extends AbstractGame {
         collidingPairs = new ArrayList<>();
 
         pz = new PanAndZoom(gc.getGraphicsContext());
+        pz.getWorldScale().set(0.370f, 0.370f);
+        pz.getWorldOffset().set(-1825f, -80f);
 
         mouse = new Vec2df();
         searchRect = new Rect();
@@ -391,9 +393,5 @@ public class QuadTreeCircleGame extends AbstractGame {
         gc.getGraphicsContext().fillText(String.format("Time needed to update: %.6fms", updateTime * 1000), 10, 90);
         gc.getGraphicsContext().fillText(String.format("Number of checks: %d", numCollisionsChecked), 10, 110);
         gc.getGraphicsContext().fillText(String.format("Number of collisions: %d", collidingPairs.size()), 10, 130);
-
-
-        // todo borrar
-        gc.getGraphicsContext().fillText(String.format("Zoom: %s Pan: %s", pz.getWorldScale(), pz.getWorldOffset()), 10, 150);
     }
 }
