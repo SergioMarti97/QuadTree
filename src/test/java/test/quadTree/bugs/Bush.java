@@ -1,25 +1,48 @@
 package test.quadTree.bugs;
 
 import base.vectors.points2d.Vec2df;
+import javafx.scene.image.Image;
+import panAndZoom.PanAndZoom;
+import panAndZoom.PanAndZoomDrawable;
+import physics.spaceDivision.Rect;
 
-public class Bush {
+public class Bush implements PanAndZoomDrawable {
+
+    private int id;
 
     private Vec2df pos;
 
     private Vec2df scale;
 
-    private int imgId;
+    private Image img;
 
     public Bush() {
         this.pos = new Vec2df();
         this.scale = new Vec2df();
-        imgId = -1;
+        img = null;
     }
 
-    public Bush(Vec2df pos, Vec2df scale, int imgId) {
+    public Bush(int id, Vec2df pos, Vec2df scale, Image imgId) {
+        this.id = id;
         this.pos = pos;
         this.scale = scale;
-        this.imgId = imgId;
+        this.img = imgId;
+    }
+
+    // Methods
+
+    public Rect getArea() {
+        return new Rect(pos, scale);
+    }
+
+    // Getters & Setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Vec2df getPos() {
@@ -38,11 +61,17 @@ public class Bush {
         this.scale = scale;
     }
 
-    public int getImgId() {
-        return imgId;
+    public Image getImg() {
+        return img;
     }
 
-    public void setImgId(int imgId) {
-        this.imgId = imgId;
+    public void setImg(Image img) {
+        this.img = img;
     }
+
+    @Override
+    public void drawYourSelf(PanAndZoom pz) {
+        pz.drawImage(img, pos, scale);
+    }
+
 }

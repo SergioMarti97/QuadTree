@@ -88,7 +88,7 @@ public class AllVsAllBallGame extends AbstractBallGame {
         gc.getGraphicsContext().setFill(Color.WHITE);
         Vec2df pos = new Vec2df(10, 30);
         gc.getGraphicsContext().fillText("Algorithm: All vs All", pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
         drawTexts(gc.getGraphicsContext(), pos);
     }
 }

@@ -169,7 +169,7 @@ public class SweepAndPruneBallGame extends AbstractBallGame {
         gc.getGraphicsContext().setFill(Color.WHITE);
         Vec2df pos = new Vec2df(10, 30);
         gc.getGraphicsContext().fillText("Algorithm: Sweep And Prune", pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
         drawTexts(gc.getGraphicsContext(), pos);
     }
 }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public class Renderer {
+public class PixelRenderer {
 
     protected final int width;
 
@@ -43,7 +43,7 @@ public class Renderer {
     
     protected Font font;
 
-    public Renderer(int width, int height) {
+    public PixelRenderer(int width, int height) {
         this.width = width;
         this.height = height;
 

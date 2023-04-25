@@ -10,7 +10,7 @@ import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.spaceDivision.Rect;
-import physics.spaceDivision.quadTree.QuadTreeContainer;
+import physics.spaceDivision.quadTree.QuadTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,9 @@ public class FindBugsGame extends AbstractGame {
 
     private final Vec2df BUSH_SIZE = new Vec2df(50, 100);
 
-    private QuadTreeContainer<Bush> treeBushes;
+    private List<Bush> bushes;
+
+    private QuadTree<Bush> treeBushes;
 
     private List<Image> bushesImages;
 
@@ -34,13 +36,13 @@ public class FindBugsGame extends AbstractGame {
 
     private Random rnd;
 
-    private Rect searchRect;
-
     private Vec2df mouse;
 
-    private boolean isDrawTree = false;
+    private Rect searchRect;
 
     private float searchSize = 500.0f;
+
+    private boolean isDrawTree = false;
 
     // Funciones
 
@@ -57,8 +59,11 @@ public class FindBugsGame extends AbstractGame {
     @Override
     public void initialize(GameApplication gc) {
         rnd = new Random();
-        treeBushes = new QuadTreeContainer<>(arena);
+        rnd.setSeed(1234);
         bushesImages = new ArrayList<>();
+
+        bushes = new ArrayList<>();
+        treeBushes = new QuadTree<>(arena);
 
         pz = new PanAndZoom(gc.getGraphicsContext());
 
@@ -73,10 +78,14 @@ public class FindBugsGame extends AbstractGame {
 
         for (int i = 0; i < NUM_BUSHES; i++) {
             Bush b = new Bush();
-            b.setImgId(rnd.nextInt(bushesImages.size()));
+
+            b.setId(bushes.size());
             b.getPos().set(rndFloat(0, arena.getSize().getX()), rndFloat(0, arena.getSize().getY()));
             b.getScale().set(rndFloat(BUSH_SIZE), rndFloat(BUSH_SIZE));
-            treeBushes.insert(b, new Rect(b.getPos(), b.getScale()));
+            b.setImg(bushesImages.get(rnd.nextInt(bushesImages.size())));
+
+            bushes.add(b);
+            treeBushes.insert(b, b.getArea());
         }
 
     }
@@ -84,6 +93,9 @@ public class FindBugsGame extends AbstractGame {
     @Override
     public void update(GameApplication gc, float elapsedTime) {
         pz.handlePanAndZoom(gc, MouseButton.MIDDLE, 0.001f, true, true);
+
+        Vec2df mouse = new Vec2df((float)gc.getInput().getMouseX(), (float)gc.getInput().getMouseY());
+        this.mouse.set(PanAndZoomUtils.screenToWorld(mouse, pz.getWorldOffset(), pz.getWorldScale()));
 
         if (gc.getInput().isKeyDown(KeyCode.TAB)) {
             isDrawTree = !isDrawTree;
@@ -98,9 +110,6 @@ public class FindBugsGame extends AbstractGame {
         }
         searchSize = Math.max(10f, Math.min(MAX_SEARCH_AREA, searchSize));
 
-        Vec2df mouse = new Vec2df((float)gc.getInput().getMouseX(), (float)gc.getInput().getMouseY());
-        this.mouse.set(PanAndZoomUtils.screenToWorld(mouse, pz.getWorldOffset(), pz.getWorldScale()));
-
         Vec2df searchArea = new Vec2df(this.searchSize);
         Vec2df rectOrigin = new Vec2df(this.mouse);
         searchArea.multiply(-0.5f);
@@ -112,7 +121,7 @@ public class FindBugsGame extends AbstractGame {
         if (gc.getInput().isKeyHeld(KeyCode.DELETE)) {
             var toRemove = treeBushes.search(searchRect);
             for (var obj : toRemove) {
-                treeBushes.remove(obj);
+                treeBushes.remove(obj, obj.getArea());
             }
         }
 
@@ -126,14 +135,14 @@ public class FindBugsGame extends AbstractGame {
         gc.getGraphicsContext().setFill(Color.BLACK);
         pz.fillRect(screen.getPos(), screen.getSize());
 
-        // Dibujar los árbustos en pantalla
+        // Dibujar los arbustos en pantalla
         int numBushesDrawn = 0;
         float bushesElapsedTime;
         long t1, t2;
 
         t1 = System.nanoTime();
         for (var bush : treeBushes.search(screen)) {
-            pz.drawImage(bushesImages.get(bush.getImgId()), bush.getPos(), bush.getScale());
+            bush.drawYourSelf(pz);
             numBushesDrawn++;
         }
         t2 = System.nanoTime();

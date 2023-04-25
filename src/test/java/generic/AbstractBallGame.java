@@ -43,7 +43,7 @@ public abstract class AbstractBallGame extends AbstractGame {
 
     protected Vec2df mouse;
 
-    protected float leading = 30;
+    protected float textLeading = 30;
 
     protected int numCollisionsChecked = 0;
 
@@ -183,19 +183,19 @@ public abstract class AbstractBallGame extends AbstractGame {
     protected Vec2df drawTexts(GraphicsContext gc, Vec2df pos) {
         // Dibujar textos
         gc.fillText(String.format("Balls drawn: %d", numBallsDrawn), pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
 
         gc.fillText(String.format("Time needed to draw: %.6fms", drawBallsTime * 1000), pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
 
         gc.fillText(String.format("Time needed to update: %.6fms", updateTime * 1000), pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
 
         gc.fillText(String.format("Number of checks: %d", numCollisionsChecked), pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
 
         gc.fillText(String.format("Number of collisions: %d", collidingPairs.size()), pos.getX(), pos.getY());
-        pos.addToY(leading);
+        pos.addToY(textLeading);
 
         // gc.fillText(String.format("Pan: %s, Zoom: %s", pz.getWorldOffset(), pz.getWorldScale()), pos.getX(), pos.getY());
         // pos.addToY(leading);
