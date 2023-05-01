@@ -21,7 +21,7 @@ import java.util.Random;
 
 public abstract class AbstractBallGame extends AbstractGame {
 
-    protected final int NUM_BALLS = 10000; // 1000
+    protected final int NUM_BALLS = 100; // 1000
 
     protected final Vec2df BALL_SIZE = new Vec2df(5, 10);
 
@@ -31,7 +31,7 @@ public abstract class AbstractBallGame extends AbstractGame {
 
     protected List<Pair<Ball, Ball>> collidingPairs;
 
-    protected final Rect arena = new Rect(0, 0, 2000, 2000); // 2000, 2000
+    protected final Rect arena = new Rect(0, 0, 1000, 1000); // 2000, 2000
 
     protected Rect screen;
 
