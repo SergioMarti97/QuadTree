@@ -8,5 +8,6 @@
 *.xcf
 *.pdf
 *.txt
+*.xlsx
 src/test/java/deprecated/
 src/main/java/deprecated/
