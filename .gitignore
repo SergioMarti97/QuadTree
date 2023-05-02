@@ -11,4 +11,4 @@
 src/test/java/measure
 src/test/java/quadTree/bugs
 
-src/main/java/deprecated
+src/main/java/deprecated/*.*
