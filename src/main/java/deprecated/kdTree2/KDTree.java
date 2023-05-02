@@ -1,4 +1,4 @@
-package physics.spaceDivision.kdTree2;
+package deprecated.kdTree2;
 
 import base.vectors.points2d.Vec2df;
 import javafx.scene.canvas.GraphicsContext;
@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class KDTree<T> {
 
     private DimensionalSplit2D<T> root;

@@ -1,4 +1,4 @@
-package median.split;
+package physics.spaceDivision.kdTree;
 
 import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
@@ -266,5 +266,54 @@ public class Split2df<T> {
         }
     }
 
+    // Leaves method
 
+    public void addLeaves(List<Pair<T, T>> leaves) {
+        if (this.list.size() == 2) {
+            T i0 = list.get(0).getValue();
+            T i1 = list.get(1).getValue();
+            Pair<T, T> p = new Pair<>(i0, i1);
+            leaves.add(p);
+        }
+
+        if (above != null) {
+            above.addLeaves(leaves);
+        }
+
+        if (below != null) {
+            below.addLeaves(leaves);
+        }
+    }
+
+    // search methdo
+
+    public List<T> search(Vec2df p, List<T> list) {
+        float v;
+        if (dimension == 0) {
+            v = p.getX();
+        } else {
+            v = p.getY();
+        }
+
+        if (v >= median) { // Above!!
+            if (above != null) {
+                return above.search(p, list);
+            }
+        } else { // Below!!
+            if (below != null) {
+                return below.search(p, list);
+            }
+        }
+
+        for (var pair : this.list) {
+            list.add(pair.getValue());
+        }
+
+        return list;
+    }
+
+    @Override
+    public String toString() {
+        return "Split2df {dimension: " + dimension + " depth: " + depth + "}";
+    }
 }

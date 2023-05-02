@@ -3,7 +3,7 @@ package median;
 import base.vectors.points2d.Vec2df;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
-import median.split.KdTree2df;
+import physics.spaceDivision.kdTree.KdTree2df;
 import physics.ball.Ball;
 import physics.spaceDivision.Rect;
 
@@ -192,7 +192,7 @@ public class MedianTest4 {
         collidingPairs.clear();
         numCollisionsChecked = 0;
 
-        tree = new KdTree2df<>(ARENA, pairs, posibleCollidingPairs);
+        tree = new KdTree2df<>(ARENA, pairs);
 
         for (var p : posibleCollidingPairs) {
             Ball b1 = p.getKey();

@@ -1,11 +1,11 @@
-package physics.spaceDivision.kdTree2;
+package deprecated.kdTree2;
 
-import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
 import physics.spaceDivision.Rect;
 
 import java.util.List;
 
+@Deprecated
 public class KDFactory {
 
     public static <T> void calDimensionalNodeRect(DimensionalSplit2D<T> ds, float splitParent, boolean parentIsHorizontal, boolean isAbove) {

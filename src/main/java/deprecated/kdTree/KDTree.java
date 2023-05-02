@@ -1,6 +1,5 @@
-package physics.spaceDivision.kdTree;
+package deprecated.kdTree;
 
-import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import physics.spaceDivision.Rect;
@@ -8,6 +7,7 @@ import physics.spaceDivision.Rect;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class KDTree<T> {
 
     private DimensionalNode<T> root = null;

@@ -21,7 +21,7 @@ import java.util.Random;
 
 public abstract class AbstractBallGame extends AbstractGame {
 
-    protected final int NUM_BALLS = 100; // 1000
+    protected final int NUM_BALLS = 6; // 1000
 
     protected final Vec2df BALL_SIZE = new Vec2df(5, 10);
 
@@ -31,7 +31,7 @@ public abstract class AbstractBallGame extends AbstractGame {
 
     protected List<Pair<Ball, Ball>> collidingPairs;
 
-    protected final Rect arena = new Rect(0, 0, 1000, 1000); // 2000, 2000
+    protected final Rect arena = new Rect(0, 0, 100, 100); // 2000, 2000
 
     protected Rect screen;
 
@@ -54,6 +54,8 @@ public abstract class AbstractBallGame extends AbstractGame {
     protected float drawBallsTime = 0;
 
     protected boolean isUpdatingBalls = false;
+
+    protected boolean isUpdateUserInput = true;
 
     // Funciones Abstractas
 
@@ -233,32 +235,34 @@ public abstract class AbstractBallGame extends AbstractGame {
         Vec2df mouse = new Vec2df((float)gc.getInput().getMouseX(), (float)gc.getInput().getMouseY());
         this.mouse.set(PanAndZoomUtils.screenToWorld(mouse, pz.getWorldOffset(), pz.getWorldScale()));
 
-        if (gc.getInput().isButtonHeld(MouseButton.PRIMARY)) {
-            var b = rndBall();
-            b.getPos().set(this.mouse);
-            addBall(b);
-        }
+        if (isUpdateUserInput) {
+            if (gc.getInput().isButtonHeld(MouseButton.PRIMARY)) {
+                var b = rndBall();
+                b.getPos().set(this.mouse);
+                addBall(b);
+            }
 
-        if (gc.getInput().isButtonDown(MouseButton.SECONDARY)) {
-            if (selectedBall == null) {
-                for (var b : balls) {
-                    b.calOri();
-                    b.calRadius();
-                    if (b.getOri().dist(this.mouse) < b.getSize().getX()) {
-                        b.getVel().set(0, 0);
-                        selectedBall = b;
+            if (gc.getInput().isButtonDown(MouseButton.SECONDARY)) {
+                if (selectedBall == null) {
+                    for (var b : balls) {
+                        b.calOri();
+                        b.calRadius();
+                        if (b.getOri().dist(this.mouse) < b.getSize().getX()) {
+                            b.getVel().set(0, 0);
+                            selectedBall = b;
+                        }
                     }
                 }
             }
-        }
 
-        if (gc.getInput().isButtonUp(MouseButton.SECONDARY)) {
-            if (selectedBall != null) {
-                final Vec2df multiplier = new Vec2df(1);
-                float velX = multiplier.getX() * (selectedBall.getPos().getX() - this.mouse.getX());
-                float velY = multiplier.getY() * (selectedBall.getPos().getY() - this.mouse.getY());
-                selectedBall.getVel().set(velX, velY);
-                selectedBall = null;
+            if (gc.getInput().isButtonUp(MouseButton.SECONDARY)) {
+                if (selectedBall != null) {
+                    final Vec2df multiplier = new Vec2df(1);
+                    float velX = multiplier.getX() * (selectedBall.getPos().getX() - this.mouse.getX());
+                    float velY = multiplier.getY() * (selectedBall.getPos().getY() - this.mouse.getY());
+                    selectedBall.getVel().set(velX, velY);
+                    selectedBall = null;
+                }
             }
         }
 

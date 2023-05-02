@@ -1,4 +1,4 @@
-package physics.spaceDivision.kdTree;
+package deprecated.kdTree;
 
 import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
@@ -6,6 +6,7 @@ import physics.spaceDivision.Rect;
 
 import java.util.List;
 
+@Deprecated
 public class KDFactory {
 
     public static <T> void calDimensionalNodeRect(DimensionalNode<T> dm, boolean isHorizontal, boolean isAbove) {

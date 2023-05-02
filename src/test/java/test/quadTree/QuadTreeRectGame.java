@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
 import panAndZoom.PanAndZoom;
 import panAndZoom.PanAndZoomUtils;
 import physics.spaceDivision.Rect;
-import physics.spaceDivision.quadTree.QuadTreeContainer;
+import deprecated.QuadTreeContainer;
 
 import java.util.Random;
 

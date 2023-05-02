@@ -5,6 +5,7 @@ import base.vectors.points2d.Vec2df;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 
 public class PanAndZoom {
@@ -288,6 +289,32 @@ public class PanAndZoom {
         worldTopLeft.multiply(-1);
         worldBottomRight.add(worldTopLeft);
         return worldBottomRight;
+    }
+
+    // Utilidades para el color
+
+    public Paint getFill() {
+        return gc.getFill();
+    }
+
+    public Paint getStroke() {
+        return gc.getStroke();
+    }
+
+    public Font getFont() {
+        return gc.getFont();
+    }
+
+    public void setFill(Paint paint) {
+        gc.setFill(paint);
+    }
+
+    public void setStroke(Paint paint) {
+        gc.setStroke(paint);
+    }
+
+    public void setFont(Font font) {
+        gc.setFont(font);
     }
 
     // Utilidades

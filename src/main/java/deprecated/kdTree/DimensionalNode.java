@@ -1,4 +1,4 @@
-package physics.spaceDivision.kdTree;
+package deprecated.kdTree;
 
 import base.vectors.points2d.Vec2df;
 import javafx.scene.paint.Color;
@@ -7,6 +7,7 @@ import javafx.util.Pair;
 import panAndZoom.PanAndZoom;
 import physics.spaceDivision.Rect;
 
+@Deprecated
 public class DimensionalNode<T> {
 
     private int depth = 0;

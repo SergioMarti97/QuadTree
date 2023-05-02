@@ -44,7 +44,7 @@ public class Ball {
         calRadius();
     }
 
-    public void draw(PanAndZoom pz, float dt) {
+    public void draw(PanAndZoom pz) {
         Vec2df oriSize = new Vec2df(4f);
 
         pz.getGc().setFill(color);

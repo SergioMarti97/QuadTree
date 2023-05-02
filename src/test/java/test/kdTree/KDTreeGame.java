@@ -8,7 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.util.Pair;
 import physics.ball.Ball;
 import physics.spaceDivision.Rect;
-import physics.spaceDivision.kdTree2.KDTree;
+import deprecated.kdTree2.KDTree;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package physics.spaceDivision.kdTree2;
+package deprecated.kdTree2;
 
 import base.vectors.points2d.Vec2df;
 import javafx.scene.canvas.GraphicsContext;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+@Deprecated
 public class DimensionalSplit2D<T> {
 
     private boolean isHorizontal = false;
