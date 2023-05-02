@@ -8,6 +8,5 @@
 *.xcf
 *.pdf
 *.txt
-src/test/java/test/measure
-src/test/java/test/quadTree/bugs
+src/test/java/deprecated/
 src/main/java/deprecated/
