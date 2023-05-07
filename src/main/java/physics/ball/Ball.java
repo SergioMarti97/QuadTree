@@ -23,6 +23,10 @@ public class Ball {
 
     private Color color;
 
+    private Vec2df acc = new Vec2df();
+
+    private Vec2df oldPos = new Vec2df();
+
     public Ball() {
         this.id = -1;
         this.pos = new Vec2df();
@@ -31,6 +35,8 @@ public class Ball {
         this.vel = new Vec2df();
         this.radius = 0;
         this.color = null;
+
+        oldPos.set(pos);
     }
 
     public Ball(int id, Vec2df pos, Vec2df vel, Vec2df size, Color color) {
@@ -42,6 +48,8 @@ public class Ball {
         this.ori = new Vec2df();
         calOri();
         calRadius();
+
+        oldPos.set(pos);
     }
 
     public void draw(PanAndZoom pz) {
@@ -162,6 +170,35 @@ public class Ball {
         return ballArea;
     }
 
+    public void updatePos(float dt) {
+        pos.addToX(vel.getX() * dt);
+        pos.addToY(vel.getY() * dt);
+    }
+
+    // Verlet integration method
+
+    public void doVerletStep(float dt) {
+
+        // Calculate velocity
+        Vec2df vel = new Vec2df(pos);
+        vel.sub(oldPos);
+
+        // Save the current position
+        oldPos.set(pos);
+
+        // Perform verlet integration
+        Vec2df acc = new Vec2df(this.acc);
+        acc.multiply(dt * dt);
+        pos.add(vel);
+        pos.add(acc);
+
+        this.acc.set(0, 0);
+    }
+
+    public void accelerate(Vec2df acc) {
+        this.acc.add(acc);
+    }
+
     // Getters & Setters
 
     public int getId() {
@@ -206,6 +243,22 @@ public class Ball {
 
     public Vec2df getOri() {
         return ori;
+    }
+
+    public Vec2df getAcc() {
+        return acc;
+    }
+
+    public void setAcc(Vec2df acc) {
+        this.acc = acc;
+    }
+
+    public Vec2df getOldPos() {
+        return oldPos;
+    }
+
+    public void setOldPos(Vec2df oldPos) {
+        this.oldPos = oldPos;
     }
 
     @Override

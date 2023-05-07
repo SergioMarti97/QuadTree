@@ -214,6 +214,11 @@ public class Vec2df implements Vec2d {
         this.y = y;
     }
 
+    public void set(float v) {
+        this.x = v;
+        this.y = v;
+    }
+
     /**
      * This method returns the magnitude of the vector.
      * It uses the pythagorean theorem to calculate

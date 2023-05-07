@@ -2,6 +2,7 @@ package panAndZoom;
 
 import base.GameApplication;
 import base.vectors.points2d.Vec2df;
+import base.vectors.points2d.Vec2di;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
@@ -238,6 +239,42 @@ public class PanAndZoom {
                 sourceDim.getX(), sourceDim.getY(),
                 p.getX(), p.getY(),
                 s.getX(), s.getY());
+    }
+
+    // Draw Background
+
+    public void drawBackgroundRepeatImage(Image img) {
+        // Vec2df imgSize = screenToWorld(new Vec2df((float)img.getWidth(), (float) img.getHeight()));
+        Vec2df imgSize = new Vec2df((float)img.getWidth(), (float) img.getHeight());
+        Vec2df worldImgSizeFloat = scaleToScreen(imgSize);
+        Vec2di worldImgSizeInt = new Vec2di((int)Math.floor(worldImgSizeFloat.getX()), (int)Math.floor(worldImgSizeFloat.getY()));
+
+        Vec2df vec2dfTL = getWorldTopLeft();
+        Vec2di vec2diTL = new Vec2di((int)Math.floor(vec2dfTL.getX()), (int)Math.floor(vec2dfTL.getY()));
+
+        Vec2df vec2dfBR = getWorldBottomRight();
+        Vec2di vec2diBR = new Vec2di((int)Math.ceil(vec2dfBR.getX()), (int)Math.ceil(vec2dfBR.getY()));
+
+        int width = (vec2diBR.getX() - vec2diTL.getX()) / worldImgSizeInt.getX();
+        int height = (vec2diBR.getY() - vec2diTL.getY()) / worldImgSizeInt.getY();
+
+        /*for (int y = vec2diTL.getY(); y < vec2diBR.getY(); y += 1) {
+            for (int x = vec2diTL.getX(); x < vec2diBR.getX(); x += 1) {
+                drawImage(img, new Vec2df(x, y), imgSize);
+            }
+        }*/
+
+        Vec2di p = new Vec2di(vec2diTL);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                drawImage(img, new Vec2df(p.getX(), p.getY()), imgSize);
+
+                p.addToX(worldImgSizeInt.getX());
+            }
+            p.setX(0);
+            p.addToY(worldImgSizeInt.getY());
+        }
+
     }
 
     // Getters & Setters

@@ -2,10 +2,12 @@ package generic;
 
 import base.GameApplication;
 import base.vectors.points2d.Vec2df;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.paint.Color;
 import javafx.util.Pair;
+import physics.spaceDivision.Rect;
 import physics.spaceDivision.kdTree.KdTree2df;
 import physics.spaceDivision.kdTree.Split2df;
 import median.treeVisualizer.TreeVisualizer;
@@ -24,6 +26,8 @@ public class KdTreeBallGame extends AbstractBallGame {
     private boolean isDrawTree = false;
 
     private TreeVisualizer<Split2df<Ball>> treeVisualizer;
+
+    private Image background;
 
     public void updateStaticCollisions(Ball b, Ball n) {
         b.calOri();
@@ -169,6 +173,8 @@ public class KdTreeBallGame extends AbstractBallGame {
                 return null;
             }
         };
+
+        background = new Image("/stone_minecraft_16x16.jpg");
     }
 
     @Override
@@ -190,6 +196,14 @@ public class KdTreeBallGame extends AbstractBallGame {
 
     @Override
     public void render(GameApplication gc) {
+
+        screen = new Rect(pz.getWorldTopLeft(), pz.getWorldVisibleArea());
+
+        // Dibujar el fondo
+        gc.getGraphicsContext().setFill(Color.BLACK);
+        pz.fillRect(screen.getPos(), screen.getSize());
+        pz.drawBackgroundRepeatImage(background);
+
         super.render(gc);
 
         pz.getGc().setLineWidth(1);

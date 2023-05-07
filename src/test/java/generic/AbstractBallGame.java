@@ -21,7 +21,7 @@ import java.util.Random;
 
 public abstract class AbstractBallGame extends AbstractGame {
 
-    protected final int NUM_BALLS = 6; // 1000
+    protected final int NUM_BALLS = 5; // 1000
 
     protected final Vec2df BALL_SIZE = new Vec2df(5, 10);
 
@@ -82,6 +82,7 @@ public abstract class AbstractBallGame extends AbstractGame {
 
         b.setId(balls.size());
         b.getPos().set(rndFloat(0, arena.getSize().getX()), rndFloat(0, arena.getSize().getY()));
+        b.setOldPos(b.getPos());
         float radius = rndFloat(BALL_SIZE);
         b.getSize().set(radius, radius);
         b.getVel().set(rndFloat(BALL_VEL), rndFloat(BALL_VEL));
@@ -98,8 +99,14 @@ public abstract class AbstractBallGame extends AbstractGame {
 
     protected void updateBallPosition(Ball b, float elapsedTime) {
         // Update position
-        b.getPos().addToX(b.getVel().getX() * elapsedTime);
-        b.getPos().addToY(b.getVel().getY() * elapsedTime);
+        b.updatePos(elapsedTime);
+
+        // Using Verlet integration method
+        /*Vec2df v = new Vec2df(b.getVel());
+        v.multiply(100);
+        v.addToY(1000);
+        b.accelerate(v); // new Vec2df(0, 20000f)
+        b.doVerletStep(elapsedTime);*/
 
         // Check area collisions
         if (b.getPos().getX() < arena.getPos().getX()) {
@@ -273,7 +280,13 @@ public abstract class AbstractBallGame extends AbstractGame {
         if (isUpdatingBalls) {
             long t1, t2;
             t1 = System.nanoTime();
-            updateBalls(elapsedTime);
+
+            final int NUM_SUB_STEPS = 8;
+            float subElapsedTime = elapsedTime / NUM_SUB_STEPS;
+            for (int i = 0; i < NUM_SUB_STEPS; i++) {
+                updateBalls(subElapsedTime);
+            }
+
             t2 = System.nanoTime();
             updateTime = (t2 - t1) / 1000000000f;
         }

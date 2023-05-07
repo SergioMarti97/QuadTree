@@ -2,7 +2,6 @@ package physics.spaceDivision.kdTree;
 
 import base.vectors.points2d.Vec2df;
 import javafx.util.Pair;
-import median.Split;
 import panAndZoom.PanAndZoom;
 import physics.spaceDivision.Rect;
 
